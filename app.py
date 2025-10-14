@@ -5,7 +5,6 @@ import random
 from datetime import datetime
 import requests
 import base64
-import pydeck as pdk
 
 # ---------------------------
 # APP CONFIG
@@ -40,7 +39,7 @@ def set_background(image_file: str):
             unsafe_allow_html=True
         )
     except FileNotFoundError:
-        pass  # skip silently if background.jpg is missing
+        pass  # Skip if no background image found
 
 # If you have a background image in your repo, uncomment below
 set_background("background.jpg")
@@ -130,49 +129,14 @@ if flight_number:
             st.info("No policy data available for this airline.")
         st.divider()
 
-        # 4️⃣ Simulated Flight Position (for presentation visuals)
+        # 4️⃣ Simulated Flight Position (simple Streamlit map)
         st.subheader("🌍 Current Flight Position (Simulated)")
 
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
 
-        # make red marker more visible
-        layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=pd.DataFrame({"latitude": [lat], "longitude": [lon]}),
-            get_position='[longitude, latitude]',
-            get_color='[255, 0, 0, 255]',
-            get_radius=150000,
-        )
-
-        view_state = pdk.ViewState(
-            latitude=lat,
-            longitude=lon,
-            zoom=2,   # zoomed out for global visibility
-            pitch=0,
-        )
-
-        # 🎨 force a solid background behind the map for visibility
-        st.markdown(
-            """
-            <style>
-            [data-testid="stDeckGlJsonChart"] {
-                background-color: #101010 !important; /* dark background */
-                border-radius: 10px;
-                padding: 10px;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.pydeck_chart(
-            pdk.Deck(
-                layers=[layer],
-                initial_view_state=view_state,
-                map_style="mapbox://styles/mapbox/dark-v10"
-            )
-        )
+        # Show map (Streamlit's built-in version)
+        st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
         st.divider()
 
         # 5️⃣ Live Weather at Destination
@@ -207,4 +171,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v2.6 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v2.7 • © 2025 FlySmart")
