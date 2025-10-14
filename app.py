@@ -29,7 +29,6 @@ st.markdown("---")
 # ---------------------------
 # FLIGHT SEARCH
 # ---------------------------
-st.subheader("🔎 Find Your Flight")
 flight_number = st.selectbox(
     "Select or enter your flight number:",
     options=sorted(flights_df["flight_number"].unique()),
@@ -132,6 +131,7 @@ if flight_number:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.1 • © 2025 FlySmart")
+
 
 
 
