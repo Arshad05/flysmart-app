@@ -56,7 +56,7 @@ def card_block(content):
             {content}
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True   # ✅ This line makes your HTML actually render
     )
 
 # Set the background
@@ -186,3 +186,4 @@ else:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.3 • © 2025 FlySmart")
+
