@@ -38,11 +38,21 @@ flight_number = st.selectbox(
 )
 
 # Mock flight database (for demonstration)
+# Load flight data from CSV
+flights_df = pd.read_csv("flights.csv")
+
+# Create a dictionary for easy lookup
 sample_flights = {
-    "BA102": {"airline": "British Airways", "origin": "London Heathrow (LHR)", "destination": "Dubai (DXB)", "departure": "2025-10-14 21:00", "status": "On Time"},
-    "EJ210": {"airline": "EasyJet", "origin": "Paris (CDG)", "destination": "Lisbon (LIS)", "departure": "2025-10-14 19:45", "status": "Delayed"},
-    "EM777": {"airline": "Emirates", "origin": "Dubai (DXB)", "destination": "Tokyo (HND)", "departure": "2025-10-15 00:10", "status": "On Time"}
+    row["flight_number"]: {
+        "airline": row["airline"],
+        "origin": row["origin"],
+        "destination": row["destination"],
+        "departure": row["departure"],
+        "status": row["status"]
+    }
+    for _, row in flights_df.iterrows()
 }
+
 
 # ---------------------------
 # MAIN CONTENT
@@ -121,5 +131,6 @@ if flight_number:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.1 • © 2025 FlySmart")
+
 
 
