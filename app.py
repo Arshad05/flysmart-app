@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# OPTIONAL BACKGROUND
+# OPTIONAL BACKGROUND IMAGE
 # ---------------------------
 def set_background(image_file: str):
     try:
@@ -40,9 +40,9 @@ def set_background(image_file: str):
             unsafe_allow_html=True
         )
     except FileNotFoundError:
-        pass  # Skip silently if no background image
+        pass  # skip silently if background.jpg is missing
 
-
+# If you have a background image in your repo, uncomment below
 set_background("background.jpg")
 
 # ---------------------------
@@ -136,23 +136,42 @@ if flight_number:
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
 
+        # make red marker more visible
         layer = pdk.Layer(
             "ScatterplotLayer",
             data=pd.DataFrame({"latitude": [lat], "longitude": [lon]}),
             get_position='[longitude, latitude]',
-            get_color='[255, 100, 100, 200]',
-            get_radius=100000,
+            get_color='[255, 0, 0, 255]',
+            get_radius=150000,
         )
 
         view_state = pdk.ViewState(
             latitude=lat,
             longitude=lon,
-            zoom=2,  # 👈 Zoomed out for visibility
+            zoom=2,   # zoomed out for global visibility
             pitch=0,
         )
 
+        # 🎨 force a solid background behind the map for visibility
+        st.markdown(
+            """
+            <style>
+            [data-testid="stDeckGlJsonChart"] {
+                background-color: #101010 !important; /* dark background */
+                border-radius: 10px;
+                padding: 10px;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
         st.pydeck_chart(
-            pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10")
+            pdk.Deck(
+                layers=[layer],
+                initial_view_state=view_state,
+                map_style="mapbox://styles/mapbox/dark-v10"
+            )
         )
         st.divider()
 
@@ -188,5 +207,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v2.5 • © 2025 FlySmart")
-
+st.caption("Developed as part of a University Project • Prototype v2.6 • © 2025 FlySmart")
