@@ -2,14 +2,15 @@ import streamlit as st
 import pandas as pd
 import json
 import random
+from datetime import datetime, timedelta
 
 # ---------------------------
 # APP CONFIG
 # ---------------------------
 st.set_page_config(
-    page_title="FlySmart | Airline Companion",
+    page_title="FlySmart | Flight Tracker",
     page_icon="✈️",
-    layout="wide"
+    layout="centered"
 )
 
 # ---------------------------
@@ -21,81 +22,81 @@ with open("airline_info.json", "r") as f:
 # ---------------------------
 # HEADER
 # ---------------------------
-st.title("✈️ FlySmart: Your Smart Airline Companion")
-st.caption("Helping travellers make informed, stress-free flight decisions.")
+st.title("✈️ FlySmart: Personal Flight Tracker")
+st.caption("Helping travellers track their flight and stay informed at every stage.")
 st.markdown("---")
 
 # ---------------------------
-# SIDEBAR
+# FLIGHT SEARCH SECTION
 # ---------------------------
-st.sidebar.header("🔍 Select Airline")
-selected_airline = st.sidebar.selectbox("Choose an airline:", list(airline_data.keys()))
-st.sidebar.info("Select an airline to view details and simulated live flights.")
+st.subheader("🔎 Find Your Flight")
 
-# ---------------------------
-# TABS LAYOUT
-# ---------------------------
-tab1, tab2 = st.tabs(["📋 Airline Information", "🌍 Live Flight Map"])
+flight_number = st.text_input("Enter your flight number (e.g. BA102):").strip().upper()
 
-# ---------------------------
-# TAB 1: AIRLINE INFO
-# ---------------------------
-with tab1:
-    st.subheader(f"🛫 {selected_airline}")
-    info = airline_data[selected_airline]
-    st.write(f"**Check-in:** {info['check_in']}")
-    st.write(f"**Baggage Drop:** {info['baggage_drop']}")
-    st.write(f"**Boarding:** {info['boarding']}")
-    st.markdown(f"[Official Website]({info['contact']})")
+# Mock database of sample flights
+sample_flights = {
+    "BA102": {"airline": "British Airways", "origin": "London Heathrow (LHR)", "destination": "Dubai (DXB)", "departure": "2025-10-14 21:00", "status": "On Time"},
+    "EJ210": {"airline": "EasyJet", "origin": "Paris (CDG)", "destination": "Lisbon (LIS)", "departure": "2025-10-14 19:45", "status": "Delayed"},
+    "EM777": {"airline": "Emirates", "origin": "Dubai (DXB)", "destination": "Tokyo (HND)", "departure": "2025-10-15 00:10", "status": "On Time"}
+}
 
-    st.markdown("---")
-    st.success("💡 Tip: Use the Live Flight Map tab to see your airline’s current simulated flights!")
+if flight_number:
+    if flight_number in sample_flights:
+        details = sample_flights[flight_number]
+        airline_name = details["airline"]
+        st.success(f"Flight {flight_number} found!")
 
-# ---------------------------
-# TAB 2: LIVE MAP
-# ---------------------------
-with tab2:
-    st.subheader(f"🌍 Simulated {selected_airline} Flights")
+        st.markdown(f"### ✈️ {details['airline']}")
+        st.write(f"**Route:** {details['origin']} → {details['destination']}")
+        st.write(f"**Departure Time:** {details['departure']}")
+        st.write(f"**Status:** {details['status']}")
 
-    # Define sample airports for origins and destinations
-    origins = ["London Heathrow (LHR)", "Paris Charles de Gaulle (CDG)", "Dubai (DXB)", 
-               "Frankfurt (FRA)", "New York JFK (JFK)", "Doha (DOH)", "Singapore (SIN)"]
+        # ---------------------------
+        # AIRLINE INFO SECTION
+        # ---------------------------
+        st.markdown("---")
+        st.subheader("🧳 Airline Information")
 
-    destinations = ["New York (JFK)", "Dubai (DXB)", "Madrid (MAD)", "Paris (CDG)", 
-                    "Rome (FCO)", "Berlin (BER)", "Lisbon (LIS)", "Doha (DOH)", "Istanbul (IST)", "Tokyo (HND)"]
-
-    num_flights = 6
-    simulated_flights = pd.DataFrame({
-        "Flight": [f"{selected_airline[:2].upper()}{100 + i}" for i in range(num_flights)],
-        "Origin": random.choices(origins, k=num_flights),
-        "Destination": random.choices(destinations, k=num_flights),
-        "Latitude": [random.uniform(-60, 60) for _ in range(num_flights)],
-        "Longitude": [random.uniform(-150, 150) for _ in range(num_flights)],
-        "Status": random.choices(["On Time", "Delayed", "Cancelled"], [0.7, 0.2, 0.1], k=num_flights)
-    })
-
-    # 🔍 Flight Search Input
-    search_query = st.text_input("Enter flight number to search (e.g. BA102):").strip().upper()
-
-    if search_query:
-        result = simulated_flights[simulated_flights["Flight"] == search_query]
-        if not result.empty:
-            st.success(f"Flight {search_query} found:")
-            st.table(result)
-            st.map(result.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}))
+        if airline_name in airline_data:
+            info = airline_data[airline_name]
+            st.write(f"**Check-in:** {info['check_in']}")
+            st.write(f"**Baggage Drop:** {info['baggage_drop']}")
+            st.write(f"**Boarding:** {info['boarding']}")
+            st.markdown(f"[Official Website]({info['contact']})")
         else:
-            st.warning("❌ Flight not found. Please check the flight number or try again.")
+            st.info("No airline policy data available for this carrier.")
+
+        # ---------------------------
+        # SIMULATED MAP POSITION
+        # ---------------------------
+        st.markdown("---")
+        st.subheader("🌍 Current Flight Position (Simulated)")
+        lat = random.uniform(-60, 60)
+        lon = random.uniform(-150, 150)
+        st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
+
+        # ---------------------------
+        # COUNTDOWN TIMER
+        # ---------------------------
+        st.markdown("---")
+        st.subheader("⏰ Countdown to Departure")
+        dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
+        remaining = dep_time - datetime.now()
+        if remaining.total_seconds() > 0:
+            hours, remainder = divmod(int(remaining.total_seconds()), 3600)
+            minutes = remainder // 60
+            st.info(f"🕓 {hours} hours and {minutes} minutes until departure.")
+        else:
+            st.warning("This flight has already departed or is in progress.")
+
     else:
-        # Default view if no search query
-        st.dataframe(simulated_flights, use_container_width=True)
-        st.map(simulated_flights.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}), size=30)
+        st.error("❌ Flight not found. Please check your flight number and try again.")
 
-    st.caption("Note: Origin and destination data are simulated for demo purposes. Real-time route data will be integrated in Assessment 002.")
-
+else:
+    st.info("Enter your flight number above to track your journey.")
 
 # ---------------------------
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v1.2 • © 2025 FlySmart")
-
+st.caption("Developed as part of a University Project • Prototype v2.0 • © 2025 FlySmart")
