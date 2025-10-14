@@ -1,9 +1,10 @@
-import streamlit as st 
+import streamlit as st  
 import pandas as pd
 import json
 import random
 from datetime import datetime
 import requests
+import base64
 
 # ---------------------------
 # APP CONFIG
@@ -13,11 +14,10 @@ st.set_page_config(
     page_icon="✈️",
     layout="centered"
 )
+
 # ---------------------------
 # BACKGROUND IMAGE (minimal)
 # ---------------------------
-import base64
-
 def set_background(image_file):
     with open(image_file, "rb") as file:
         encoded_string = base64.b64encode(file.read()).decode()
@@ -59,22 +59,17 @@ def card_block(content):
         unsafe_allow_html=True
     )
 
-
-# Set the background (make sure the file exists)
+# Set the background
 set_background("background.jpg")
 
 # ---------------------------
 # LOAD DATA
 # ---------------------------
-
-# Load airline info
 with open("airline_info.json", "r") as f:
     airline_data = json.load(f)
 
-# Load flight data from CSV
 flights_df = pd.read_csv("flights.csv")
 
-# Create a dictionary for quick lookup
 sample_flights = {
     row["flight_number"]: {
         "airline": row["airline"],
@@ -122,40 +117,43 @@ if flight_number:
         """)
 
         # 2️⃣ Countdown to Departure
-        st.markdown("### ⏰ Time to Departure")
         dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
         remaining = dep_time - datetime.now()
         if remaining.total_seconds() > 0:
             hours, remainder = divmod(int(remaining.total_seconds()), 3600)
             minutes = remainder // 60
-            st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
+            countdown_msg = f"{hours} hours and {minutes} minutes remaining until departure."
         else:
-            st.warning("This flight has already departed or is currently in progress.")
-        st.markdown("---")
+            countdown_msg = "This flight has already departed or is currently in progress."
+
+        card_block(f"""
+        <h3>⏰ Time to Departure</h3>
+        {countdown_msg}
+        """)
 
         # 3️⃣ Airline Information
-        st.markdown("### 🧳 Airline Information")
         if airline_name in airline_data:
             info = airline_data[airline_name]
-            st.write(f"**Check-in:** {info['check_in']}")
-            st.write(f"**Baggage Drop:** {info['baggage_drop']}")
-            st.write(f"**Boarding:** {info['boarding']}")
-            st.markdown(f"[Visit {airline_name} Website]({info['contact']})")
+            airline_info_html = f"""
+            <h3>🧳 Airline Information</h3>
+            <b>Check-in:</b> {info['check_in']}<br>
+            <b>Baggage Drop:</b> {info['baggage_drop']}<br>
+            <b>Boarding:</b> {info['boarding']}<br>
+            <a href="{info['contact']}" target="_blank">Visit {airline_name} Website</a>
+            """
         else:
-            st.info("No policy data available for this airline.")
-        st.markdown("---")
+            airline_info_html = "<h3>🧳 Airline Information</h3>No policy data available for this airline."
+
+        card_block(airline_info_html)
 
         # 4️⃣ Simulated Flight Position (for presentation visuals)
-        st.markdown("### 🌍 Current Flight Position (Simulated)")
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
+        card_block("<h3>🌍 Current Flight Position (Simulated)</h3>")
         st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
 
         # 5️⃣ Live Weather at Destination
-        st.markdown("---")
-        st.markdown("### 🌤 Live Weather at Destination")
-
-        city = details["destination"].split("(")[0].strip()  # extract city name
+        city = details["destination"].split("(")[0].strip()
         api_key = st.secrets["weather"]["api_key"]
         url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
 
@@ -166,12 +164,17 @@ if flight_number:
                 temp = data["main"]["temp"]
                 desc = data["weather"][0]["description"].title()
                 icon = data["weather"][0]["icon"]
-                st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=80)
-                st.success(f"Weather in {city}: {temp} °C, {desc}")
+                weather_html = f"""
+                <h3>🌤 Live Weather at Destination</h3>
+                <img src="http://openweathermap.org/img/wn/{icon}.png" width="80">
+                <p><b>Weather in {city}:</b> {temp} °C, {desc}</p>
+                """
             else:
-                st.warning("Weather data not available right now.")
+                weather_html = "<h3>🌤 Live Weather at Destination</h3>Weather data not available right now."
         except Exception:
-            st.warning("Unable to fetch live weather data.")
+            weather_html = "<h3>🌤 Live Weather at Destination</h3>Unable to fetch live weather data."
+
+        card_block(weather_html)
 
     else:
         st.error("❌ Flight not found. Please check your flight number and try again.")
@@ -182,7 +185,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v2.2 • © 2025 FlySmart")
-
-
-
+st.caption("Developed as part of a University Project • Prototype v2.3 • © 2025 FlySmart")
