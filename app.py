@@ -1,8 +1,9 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 import json
 import random
 from datetime import datetime
+import requests
 
 # ---------------------------
 # APP CONFIG
@@ -14,34 +15,17 @@ st.set_page_config(
 )
 
 # ---------------------------
-# LOAD AIRLINE DATA
+# LOAD DATA
 # ---------------------------
+
+# Load airline info
 with open("airline_info.json", "r") as f:
     airline_data = json.load(f)
 
-# ---------------------------
-# HEADER
-# ---------------------------
-st.title("✈️ FlySmart: Personal Flight Tracker")
-st.caption("Track your flight. Know what matters. Travel stress-free.")
-st.markdown("---")
-
-# ---------------------------
-# FLIGHT SEARCH
-# ---------------------------
-flight_number = st.selectbox(
-    "Select or enter your flight number:",
-    options=sorted(flights_df["flight_number"].unique()),
-    index=None,
-    placeholder="Type or select a flight..."
-)
-
-
-# Mock flight database (for demonstration)
 # Load flight data from CSV
 flights_df = pd.read_csv("flights.csv")
 
-# Create a dictionary for easy lookup
+# Create a dictionary for quick lookup
 sample_flights = {
     row["flight_number"]: {
         "airline": row["airline"],
@@ -53,6 +37,23 @@ sample_flights = {
     for _, row in flights_df.iterrows()
 }
 
+# ---------------------------
+# HEADER
+# ---------------------------
+st.title("✈️ FlySmart: Personal Flight Tracker")
+st.caption("Track your flight. Know what matters. Travel stress-free.")
+st.markdown("---")
+
+# ---------------------------
+# FLIGHT SEARCH
+# ---------------------------
+st.subheader("🔎 Find Your Flight")
+flight_number = st.selectbox(
+    "Select or enter your flight number:",
+    options=sorted(flights_df["flight_number"].unique()),
+    index=None,
+    placeholder="Type or select a flight..."
+)
 
 # ---------------------------
 # MAIN CONTENT
@@ -106,7 +107,6 @@ if flight_number:
         st.markdown("---")
         st.markdown("### 🌤 Live Weather at Destination")
 
-        import requests
         city = details["destination"].split("(")[0].strip()  # extract city name
         api_key = st.secrets["weather"]["api_key"]
         url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
@@ -122,17 +122,16 @@ if flight_number:
                 st.success(f"Weather in {city}: {temp} °C, {desc}")
             else:
                 st.warning("Weather data not available right now.")
-        except Exception as e:
+        except Exception:
             st.warning("Unable to fetch live weather data.")
 
+    else:
+        st.error("❌ Flight not found. Please check your flight number and try again.")
+else:
+    st.info("Enter your flight number above to track your journey.")
 
 # ---------------------------
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v2.1 • © 2025 FlySmart")
-
-
-
-
-
+st.caption("Developed as part of a University Project • Prototype v2.2 • © 2025 FlySmart")
