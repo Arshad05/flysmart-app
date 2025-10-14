@@ -19,18 +19,34 @@ with open("airline_info.json", "r") as f:
     airline_data = json.load(f)
 
 # ---------------------------
+# SIDEBAR SETTINGS
+# ---------------------------
+st.sidebar.header("⚙️ Settings & Airline Selection")
+
+# Theme toggle
+theme = st.sidebar.radio("Theme Mode:", ["Light 🌤️", "Dark 🌙"])
+
+# Airline selection
+selected_airline = st.sidebar.selectbox("Choose an airline:", list(airline_data.keys()))
+st.sidebar.info("Select an airline to view details and simulated live flights.")
+
+# Apply theme color styles
+if theme == "Dark 🌙":
+    st.markdown("""
+        <style>
+        body {
+            background-color: #0E1117;
+            color: white;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+# ---------------------------
 # HEADER
 # ---------------------------
 st.title("✈️ FlySmart: Your Smart Airline Companion")
 st.caption("Helping travellers make informed, stress-free flight decisions.")
 st.markdown("---")
-
-# ---------------------------
-# SIDEBAR
-# ---------------------------
-st.sidebar.header("🔍 Select Airline")
-selected_airline = st.sidebar.selectbox("Choose an airline:", list(airline_data.keys()))
-st.sidebar.info("Select an airline to view details and simulated live flights.")
 
 # ---------------------------
 # TABS LAYOUT
@@ -71,17 +87,31 @@ with tab2:
     # 🔍 Flight Search Input
     search_query = st.text_input("Enter flight number to search (e.g. BA102):").strip().upper()
 
+    # Helper function: colour-code status text
+    def color_status(val):
+        if val == "On Time":
+            color = "green"
+        elif val == "Delayed":
+            color = "orange"
+        else:
+            color = "red"
+        return f"<span style='color:{color}; font-weight:bold;'>{val}</span>"
+
+    # Search logic
     if search_query:
         result = simulated_flights[simulated_flights["Flight"] == search_query]
         if not result.empty:
             st.success(f"Flight {search_query} found:")
-            st.table(result)
+            styled = result.to_html(escape=False, formatters={"Status": color_status})
+            st.markdown(styled, unsafe_allow_html=True)
             st.map(result.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}))
         else:
             st.warning("❌ Flight not found. Please check the flight number or try again.")
     else:
         # Default view if no search query
-        st.dataframe(simulated_flights, use_container_width=True)
+        styled_df = simulated_flights.copy()
+        styled_df["Status"] = styled_df["Status"].apply(lambda x: color_status(x))
+        st.markdown(styled_df.to_html(escape=False), unsafe_allow_html=True)
         st.map(simulated_flights.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}), size=30)
 
     st.caption("Note: This is simulated data for demo purposes. Real-time API integration planned for Assessment 002.")
@@ -90,4 +120,4 @@ with tab2:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v1.2 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v1.3 • © 2025 FlySmart")
