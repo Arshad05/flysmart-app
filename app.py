@@ -42,6 +42,24 @@ def set_background(image_file):
         unsafe_allow_html=True
     )
 
+# ---------------------------
+# CARD STYLE CONTAINER
+# ---------------------------
+def card_block(content):
+    st.markdown(
+        f"""
+        <div style='background: rgba(255, 255, 255, 0.75);
+                    border-radius: 16px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+            {content}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 # Set the background (make sure the file exists)
 set_background("background.jpg")
 
@@ -94,15 +112,14 @@ if flight_number:
         details = sample_flights[flight_number]
         airline_name = details["airline"]
 
-        # 1️⃣ Flight Summary
-        st.markdown("### ✈️ Flight Summary")
-        st.markdown(f"""
-        **Flight:** {flight_number} — {airline_name}  
-        **Route:** {details['origin']} → {details['destination']}  
-        **Departure:** {details['departure']}  
-        **Status:** {details['status']}
-        """)
-        st.markdown("---")
+# 1️⃣ Flight Summary
+card_block(f"""
+<h3>✈️ Flight Summary</h3>
+<b>Flight:</b> {flight_number} — {airline_name}<br>
+<b>Route:</b> {details['origin']} → {details['destination']}<br>
+<b>Departure:</b> {details['departure']}<br>
+<b>Status:</b> {details['status']}
+""")
 
         # 2️⃣ Countdown to Departure
         st.markdown("### ⏰ Time to Departure")
@@ -166,4 +183,5 @@ else:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.2 • © 2025 FlySmart")
+
 
