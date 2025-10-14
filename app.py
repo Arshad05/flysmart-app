@@ -58,14 +58,8 @@ with tab1:
 with tab2:
     st.subheader(f"🌍 Simulated {selected_airline} Flights")
 
-    # Simulate flight data (5 flights)
+    # Simulate flight data (6 flights)
     destinations = ["New York", "Dubai", "Madrid", "Paris", "Rome", "Berlin", "Lisbon", "Doha", "Istanbul", "Tokyo"]
-    coordinates = [
-        (40.7128, -74.0060), (25.2048, 55.2708), (40.4168, -3.7038),
-        (48.8566, 2.3522), (41.9028, 12.4964), (52.5200, 13.4050),
-        (38.7169, -9.1399), (25.276987, 51.520008), (41.0082, 28.9784), (35.6895, 139.6917)
-    ]
-
     num_flights = 6
     simulated_flights = pd.DataFrame({
         "Flight": [f"{selected_airline[:2].upper()}{100 + i}" for i in range(num_flights)],
@@ -74,6 +68,25 @@ with tab2:
         "Longitude": [random.uniform(-150, 150) for _ in range(num_flights)],
         "Status": random.choices(["On Time", "Delayed", "Cancelled"], [0.7, 0.2, 0.1], k=num_flights)
     })
+
+    # 🔍 Flight Search Input
+    search_query = st.text_input("Enter flight number to search (e.g. BA102):").strip().upper()
+
+    if search_query:
+        result = simulated_flights[simulated_flights["Flight"] == search_query]
+        if not result.empty:
+            st.success(f"Flight {search_query} found:")
+            st.table(result)
+            st.map(result.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}))
+        else:
+            st.warning("❌ Flight not found. Please check the flight number or try again.")
+    else:
+        # Default view if no search query
+        st.dataframe(simulated_flights, use_container_width=True)
+        st.map(simulated_flights.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}), size=30)
+
+    st.caption("Note: This is simulated data for demo purposes. Real-time API integration planned for Assessment 002.")
+
 
     # Display the simulated flight table
     st.dataframe(simulated_flights, use_container_width=True)
@@ -90,4 +103,5 @@ with tab2:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v1.1 • © 2025 FlySmart")
+
 
