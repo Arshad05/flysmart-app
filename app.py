@@ -133,34 +133,60 @@ if flight_number:
             st.info("No policy data available for this airline.")
 
         st.divider()
+# 4) Simulated Flight Position (for presentation visuals)
+st.subheader("🌍 Current Flight Position (Simulated)")
 
 import pydeck as pdk
 
-st.subheader("🌍 Current Flight Position (Simulated)")
-
-# Generate random position
+# Generate random simulated flight position
 lat = random.uniform(-60, 60)
 lon = random.uniform(-150, 150)
 
-# Define the map layer
+# Define the pydeck layer
 layer = pdk.Layer(
     "ScatterplotLayer",
     data=pd.DataFrame({"latitude": [lat], "longitude": [lon]}),
     get_position='[longitude, latitude]',
     get_color='[255, 100, 100, 200]',
-    get_radius=100000,  # larger radius for visibility
+    get_radius=100000,
 )
 
-# Define the view state (center + zoom level)
+# Define initial map view (zoomed out a bit for global view)
 view_state = pdk.ViewState(
     latitude=lat,
     longitude=lon,
-    zoom=2,          # 👈 lower zoom number = zoomed out view
+    zoom=2,
     pitch=0,
 )
 
 # Render the map
 st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/light-v9"))
+
+st.divider()
+
+# 5) Live Weather at Destination
+st.subheader("🌤 Live Weather at Destination")
+city = details["destination"].split("(")[0].strip()
+
+try:
+    api_key = st.secrets["weather"]["api_key"]
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    response = requests.get(url, timeout=10)
+    data = response.json()
+    if data.get("cod") == 200:
+        temp = data["main"]["temp"]
+        desc = data["weather"][0]["description"].title()
+        icon = data["weather"][0]["icon"]
+        cols = st.columns([1, 4])
+        with cols[0]:
+            st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
+        with cols[1]:
+            st.success(f"Weather in {city}: **{temp} °C**, {desc}")
+    else:
+        st.warning("Weather data not available right now.")
+except Exception:
+    st.warning("Unable to fetch live weather data.")
+
 
         # 5) Live Weather at Destination
         st.subheader("🌤 Live Weather at Destination")
@@ -194,4 +220,5 @@ else:
 # ---------------------------
 st.divider()
 st.caption("Developed as part of a University Project • Prototype v2.5 • © 2025 FlySmart")
+
 
