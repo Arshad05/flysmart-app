@@ -5,7 +5,6 @@ import random
 from datetime import datetime
 import requests
 import base64
-import pydeck as pdk  # For the map
 
 # ---------------------------
 # APP CONFIG
@@ -130,81 +129,16 @@ if flight_number:
             st.info("No policy data available for this airline.")
         st.divider()
 
-        # 4️⃣ Simulated Flight Position (✈️ Plane Icon with Fallback Dot)
+        # 4️⃣ Simulated Flight Position (Simple Streamlit Map)
         st.subheader("🌍 Current Flight Position (Simulated)")
 
         # Generate random simulated coordinates
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
 
-        # ✅ Reliable PNG airplane icon (GitHub-hosted)
-        icon_data = {
-            "url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/maps/flight_takeoff/materialicons/48dp/2x/baseline_flight_takeoff_black_48dp.png",
-            "width": 64,
-            "height": 64,
-            "anchorY": 64,
-        }
-
-        # DataFrame for the flight position
-        flight_df = pd.DataFrame(
-            [{
-                "lat": lat,
-                "lon": lon,
-                "icon_data": icon_data,
-            }]
-        )
-
-        # ✈️ Plane Icon Layer
-        icon_layer = pdk.Layer(
-            "IconLayer",
-            data=flight_df,
-            get_icon="icon_data",
-            get_size=3.5,
-            get_position='[lon, lat]',
-            pickable=True,
-        )
-
-        # 🔴 Fallback red dot (in case icon fails)
-        dot_layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=pd.DataFrame({"lat": [lat], "lon": [lon]}),
-            get_position='[lon, lat]',
-            get_color='[255, 50, 50, 255]',
-            get_radius=80000,
-        )
-
-        # Map view setup
-        view_state = pdk.ViewState(
-            latitude=lat,
-            longitude=lon,
-            zoom=2.2,
-            pitch=0,
-        )
-
-        # Add dark contrast background for map container
-        st.markdown(
-            """
-            <style>
-            [data-testid="stDeckGlJsonChart"] {
-                background-color: #181818 !important;
-                border-radius: 10px;
-                padding: 10px;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-
-        # ✅ Render OpenStreetMap with working plane icon + fallback
-        st.pydeck_chart(
-            pdk.Deck(
-                map_style=None,  # Use OpenStreetMap
-                initial_view_state=view_state,
-                layers=[dot_layer, icon_layer],
-                tooltip={"text": "✈️ Flight Position"},
-            )
-        )
-
+        # Simple Streamlit map
+        st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
+        st.caption("This position is simulated for demonstration purposes.")
         st.divider()
 
         # 5️⃣ Live Weather at Destination
@@ -239,4 +173,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.1 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v3.2 • © 2025 FlySmart")
