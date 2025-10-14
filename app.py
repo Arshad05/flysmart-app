@@ -112,14 +112,14 @@ if flight_number:
         details = sample_flights[flight_number]
         airline_name = details["airline"]
 
-# 1️⃣ Flight Summary
-card_block(f"""
-<h3>✈️ Flight Summary</h3>
-<b>Flight:</b> {flight_number} — {airline_name}<br>
-<b>Route:</b> {details['origin']} → {details['destination']}<br>
-<b>Departure:</b> {details['departure']}<br>
-<b>Status:</b> {details['status']}
-""")
+        # 1️⃣ Flight Summary
+        card_block(f"""
+        <h3>✈️ Flight Summary</h3>
+        <b>Flight:</b> {flight_number} — {airline_name}<br>
+        <b>Route:</b> {details['origin']} → {details['destination']}<br>
+        <b>Departure:</b> {details['departure']}<br>
+        <b>Status:</b> {details['status']}
+        """)
 
         # 2️⃣ Countdown to Departure
         st.markdown("### ⏰ Time to Departure")
@@ -183,5 +183,6 @@ else:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.2 • © 2025 FlySmart")
+
 
 
