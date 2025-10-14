@@ -1,0 +1,7 @@
+flight_number,airline,origin,destination,departure,status
+BA102,British Airways,London Heathrow (LHR),Dubai (DXB),2025-10-14 21:00,On Time
+EJ210,EasyJet,Paris (CDG),Lisbon (LIS),2025-10-14 19:45,Delayed
+EM777,Emirates,Dubai (DXB),Tokyo (HND),2025-10-15 00:10,On Time
+QR908,Qatar Airways,Doha (DOH),Sydney (SYD),2025-10-15 01:30,On Time
+KL120,KLM,Amsterdam (AMS),New York (JFK),2025-10-14 16:30,Cancelled
+LH420,Lufthansa,Frankfurt (FRA),Boston (BOS),2025-10-14 17:50,On Time
