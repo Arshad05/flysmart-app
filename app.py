@@ -152,7 +152,7 @@ if flight_number:
         )
 
         st.pydeck_chart(
-            pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/light-v9")
+            pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10")
         )
         st.divider()
 
@@ -189,3 +189,4 @@ else:
 # ---------------------------
 st.divider()
 st.caption("Developed as part of a University Project • Prototype v2.5 • © 2025 FlySmart")
+
