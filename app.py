@@ -30,7 +30,6 @@ st.markdown("---")
 # ---------------------------
 st.sidebar.header("🔍 Select Airline")
 selected_airline = st.sidebar.selectbox("Choose an airline:", list(airline_data.keys()))
-
 st.sidebar.info("Select an airline to view details and simulated live flights.")
 
 # ---------------------------
@@ -87,21 +86,8 @@ with tab2:
 
     st.caption("Note: This is simulated data for demo purposes. Real-time API integration planned for Assessment 002.")
 
-
-    # Display the simulated flight table
-    st.dataframe(simulated_flights, use_container_width=True)
-
-    # Map visualization
-    # Map visualization (fixed lowercase lat/long)
-    st.map(simulated_flights.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}), size=30)
-
-
-    st.caption("Note: This is simulated data for demo purposes. Real-time API integration planned for Assessment 002.")
-
 # ---------------------------
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v1.1 • © 2025 FlySmart")
-
-
+st.caption("Developed as part of a University Project • Prototype v1.2 • © 2025 FlySmart")
