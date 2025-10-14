@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 import requests
 import base64
+import pydeck as pdk  # Needed for the custom map
 
 # ---------------------------
 # APP CONFIG
@@ -41,7 +42,6 @@ def set_background(image_file: str):
     except FileNotFoundError:
         pass  # Skip if no background image found
 
-# If you have a background image in your repo, uncomment below
 set_background("background.jpg")
 
 # ---------------------------
@@ -129,14 +129,71 @@ if flight_number:
             st.info("No policy data available for this airline.")
         st.divider()
 
-        # 4️⃣ Simulated Flight Position (simple Streamlit map)
+        # 4️⃣ Simulated Flight Position (with flight icon)
         st.subheader("🌍 Current Flight Position (Simulated)")
 
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
 
-        # Show map (Streamlit's built-in version)
-        st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
+        # Define a flight icon
+        icon_data = {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Plane_icon.svg",
+            "width": 128,
+            "height": 128,
+            "anchorY": 128,
+        }
+
+        # Create DataFrame with coordinates and icon
+        flight_df = pd.DataFrame(
+            [{
+                "lat": lat,
+                "lon": lon,
+                "icon_data": icon_data,
+            }]
+        )
+
+        # Define icon layer
+        icon_layer = pdk.Layer(
+            "IconLayer",
+            data=flight_df,
+            get_icon="icon_data",
+            get_size=4,
+            get_position='[lon, lat]',
+            pickable=True,
+        )
+
+        # Map view
+        view_state = pdk.ViewState(
+            latitude=lat,
+            longitude=lon,
+            zoom=2.5,
+            pitch=0,
+        )
+
+        # Add dark background for visibility
+        st.markdown(
+            """
+            <style>
+            [data-testid="stDeckGlJsonChart"] {
+                background-color: #101010 !important;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Render map
+        st.pydeck_chart(
+            pdk.Deck(
+                layers=[icon_layer],
+                initial_view_state=view_state,
+                map_style="mapbox://styles/mapbox/dark-v10",
+                tooltip={"text": "Flight Position"},
+            )
+        )
+
         st.divider()
 
         # 5️⃣ Live Weather at Destination
@@ -171,4 +228,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v2.7 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v2.8 • © 2025 FlySmart")
