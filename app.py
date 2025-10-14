@@ -5,7 +5,7 @@ import random
 from datetime import datetime
 import requests
 import base64
-import pydeck as pdk  # Needed for the custom map
+import pydeck as pdk  # For the map
 
 # ---------------------------
 # APP CONFIG
@@ -40,8 +40,9 @@ def set_background(image_file: str):
             unsafe_allow_html=True
         )
     except FileNotFoundError:
-        pass  # Skip if no background image found
+        pass
 
+# Apply background (optional)
 set_background("background.jpg")
 
 # ---------------------------
@@ -129,7 +130,7 @@ if flight_number:
             st.info("No policy data available for this airline.")
         st.divider()
 
-        # 4️⃣ Simulated Flight Position (with flight icon)
+        # 4️⃣ Simulated Flight Position (✈️ flight icon on OpenStreetMap)
         st.subheader("🌍 Current Flight Position (Simulated)")
 
         lat = random.uniform(-60, 60)
@@ -157,25 +158,25 @@ if flight_number:
             "IconLayer",
             data=flight_df,
             get_icon="icon_data",
-            get_size=4,
+            get_size=5,
             get_position='[lon, lat]',
             pickable=True,
         )
 
-        # Map view
+        # View settings
         view_state = pdk.ViewState(
             latitude=lat,
             longitude=lon,
-            zoom=2.5,
+            zoom=1.8,
             pitch=0,
         )
 
-        # Add dark background for visibility
+        # Add solid background for visibility
         st.markdown(
             """
             <style>
             [data-testid="stDeckGlJsonChart"] {
-                background-color: #101010 !important;
+                background-color: #181818 !important;
                 border-radius: 10px;
                 padding: 10px;
             }
@@ -184,13 +185,13 @@ if flight_number:
             unsafe_allow_html=True
         )
 
-        # Render map
+        # Render visible OpenStreetMap (no token needed)
         st.pydeck_chart(
             pdk.Deck(
-                layers=[icon_layer],
+                map_style=None,  # ✅ Removes Mapbox dependency
                 initial_view_state=view_state,
-                map_style="mapbox://styles/mapbox/dark-v10",
-                tooltip={"text": "Flight Position"},
+                layers=[icon_layer],
+                tooltip={"text": "✈️ Flight Position"},
             )
         )
 
@@ -228,4 +229,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v2.8 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v2.9 • © 2025 FlySmart")
