@@ -130,21 +130,22 @@ if flight_number:
             st.info("No policy data available for this airline.")
         st.divider()
 
-        # 4️⃣ Simulated Flight Position (✈️ Plane Icon + Fallback Dot)
+        # 4️⃣ Simulated Flight Position (✈️ Plane Icon with Fallback Dot)
         st.subheader("🌍 Current Flight Position (Simulated)")
 
+        # Generate random simulated coordinates
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
 
-        # ✅ Reliable PNG icon for airplane
+        # ✅ Reliable PNG airplane icon (GitHub-hosted)
         icon_data = {
-            "url": "https://cdn-icons-png.flaticon.com/512/681/681494.png",  # PNG plane icon
-            "width": 128,
-            "height": 128,
-            "anchorY": 128,
+            "url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/maps/flight_takeoff/materialicons/48dp/2x/baseline_flight_takeoff_black_48dp.png",
+            "width": 64,
+            "height": 64,
+            "anchorY": 64,
         }
 
-        # DataFrame for plane icon
+        # DataFrame for the flight position
         flight_df = pd.DataFrame(
             [{
                 "lat": lat,
@@ -153,34 +154,34 @@ if flight_number:
             }]
         )
 
-        # Icon layer (plane)
+        # ✈️ Plane Icon Layer
         icon_layer = pdk.Layer(
             "IconLayer",
             data=flight_df,
             get_icon="icon_data",
-            get_size=5,
+            get_size=3.5,
             get_position='[lon, lat]',
             pickable=True,
         )
 
-        # Red dot fallback layer
+        # 🔴 Fallback red dot (in case icon fails)
         dot_layer = pdk.Layer(
             "ScatterplotLayer",
             data=pd.DataFrame({"lat": [lat], "lon": [lon]}),
             get_position='[lon, lat]',
-            get_color='[255, 0, 0, 255]',
-            get_radius=100000,
+            get_color='[255, 50, 50, 255]',
+            get_radius=80000,
         )
 
         # Map view setup
         view_state = pdk.ViewState(
             latitude=lat,
             longitude=lon,
-            zoom=2,
+            zoom=2.2,
             pitch=0,
         )
 
-        # Add solid dark background
+        # Add dark contrast background for map container
         st.markdown(
             """
             <style>
@@ -194,10 +195,10 @@ if flight_number:
             unsafe_allow_html=True
         )
 
-        # ✅ Render OpenStreetMap with icon + fallback
+        # ✅ Render OpenStreetMap with working plane icon + fallback
         st.pydeck_chart(
             pdk.Deck(
-                map_style=None,  # OpenStreetMap
+                map_style=None,  # Use OpenStreetMap
                 initial_view_state=view_state,
                 layers=[dot_layer, icon_layer],
                 tooltip={"text": "✈️ Flight Position"},
@@ -238,4 +239,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.0 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v3.1 • © 2025 FlySmart")
