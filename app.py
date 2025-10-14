@@ -13,6 +13,37 @@ st.set_page_config(
     page_icon="✈️",
     layout="centered"
 )
+# ---------------------------
+# BACKGROUND IMAGE (minimal)
+# ---------------------------
+import base64
+
+def set_background(image_file):
+    with open(image_file, "rb") as file:
+        encoded_string = base64.b64encode(file.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image: url("data:image/png;base64,{encoded_string}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }}
+        [data-testid="stHeader"], [data-testid="stToolbar"] {{
+            background: rgba(0, 0, 0, 0);
+        }}
+        .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 {{
+            color: #ffffff;
+            text-shadow: 0 0 6px rgba(0,0,0,0.4);
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Set the background (make sure the file exists)
+set_background("background.jpg")
 
 # ---------------------------
 # LOAD DATA
@@ -135,3 +166,4 @@ else:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.2 • © 2025 FlySmart")
+
