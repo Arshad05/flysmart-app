@@ -134,13 +134,33 @@ if flight_number:
 
         st.divider()
 
-        # 4) Simulated Flight Position (visual)
-        st.subheader("🌍 Current Flight Position (Simulated)")
-        lat = random.uniform(-60, 60)
-        lon = random.uniform(-150, 150)
-        st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
+import pydeck as pdk
 
-        st.divider()
+st.subheader("🌍 Current Flight Position (Simulated)")
+
+# Generate random position
+lat = random.uniform(-60, 60)
+lon = random.uniform(-150, 150)
+
+# Define the map layer
+layer = pdk.Layer(
+    "ScatterplotLayer",
+    data=pd.DataFrame({"latitude": [lat], "longitude": [lon]}),
+    get_position='[longitude, latitude]',
+    get_color='[255, 100, 100, 200]',
+    get_radius=100000,  # larger radius for visibility
+)
+
+# Define the view state (center + zoom level)
+view_state = pdk.ViewState(
+    latitude=lat,
+    longitude=lon,
+    zoom=2,          # 👈 lower zoom number = zoomed out view
+    pitch=0,
+)
+
+# Render the map
+st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/light-v9"))
 
         # 5) Live Weather at Destination
         st.subheader("🌤 Live Weather at Destination")
@@ -174,3 +194,4 @@ else:
 # ---------------------------
 st.divider()
 st.caption("Developed as part of a University Project • Prototype v2.5 • © 2025 FlySmart")
+
