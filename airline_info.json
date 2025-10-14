@@ -1,0 +1,20 @@
+{
+  "British Airways": {
+    "check_in": "Opens 24 hours before departure; closes 1 hour before flight.",
+    "baggage_drop": "Closes 45 minutes before departure.",
+    "boarding": "Gate closes 20 minutes before departure.",
+    "contact": "https://www.britishairways.com"
+  },
+  "EasyJet": {
+    "check_in": "Opens 30 days before departure; closes 2 hours before flight.",
+    "baggage_drop": "Closes 40 minutes before departure.",
+    "boarding": "Gate closes 30 minutes before departure.",
+    "contact": "https://www.easyjet.com"
+  },
+  "Emirates": {
+    "check_in": "Opens 48 hours before departure; closes 90 minutes before flight.",
+    "baggage_drop": "Closes 60 minutes before departure.",
+    "boarding": "Gate closes 20 minutes before departure.",
+    "contact": "https://www.emirates.com"
+  }
+}
