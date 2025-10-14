@@ -87,13 +87,33 @@ if flight_number:
         lon = random.uniform(-150, 150)
         st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
 
-    else:
-        st.error("❌ Flight not found. Please check the flight number and try again.")
-else:
-    st.info("Enter your flight number above to track your journey.")
+        # 5️⃣ Live Weather at Destination
+        st.markdown("---")
+        st.markdown("### 🌤 Live Weather at Destination")
+
+        import requests
+        city = details["destination"].split("(")[0].strip()  # extract city name
+        api_key = st.secrets["weather"]["api_key"]
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+
+        try:
+            response = requests.get(url)
+            data = response.json()
+            if data.get("cod") == 200:
+                temp = data["main"]["temp"]
+                desc = data["weather"][0]["description"].title()
+                icon = data["weather"][0]["icon"]
+                st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=80)
+                st.success(f"Weather in {city}: {temp} °C, {desc}")
+            else:
+                st.warning("Weather data not available right now.")
+        except Exception as e:
+            st.warning("Unable to fetch live weather data.")
+
 
 # ---------------------------
 # FOOTER
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.1 • © 2025 FlySmart")
+
