@@ -57,11 +57,17 @@ with tab1:
 with tab2:
     st.subheader(f"🌍 Simulated {selected_airline} Flights")
 
-    # Simulate flight data (6 flights)
-    destinations = ["New York", "Dubai", "Madrid", "Paris", "Rome", "Berlin", "Lisbon", "Doha", "Istanbul", "Tokyo"]
+    # Define sample airports for origins and destinations
+    origins = ["London Heathrow (LHR)", "Paris Charles de Gaulle (CDG)", "Dubai (DXB)", 
+               "Frankfurt (FRA)", "New York JFK (JFK)", "Doha (DOH)", "Singapore (SIN)"]
+
+    destinations = ["New York (JFK)", "Dubai (DXB)", "Madrid (MAD)", "Paris (CDG)", 
+                    "Rome (FCO)", "Berlin (BER)", "Lisbon (LIS)", "Doha (DOH)", "Istanbul (IST)", "Tokyo (HND)"]
+
     num_flights = 6
     simulated_flights = pd.DataFrame({
         "Flight": [f"{selected_airline[:2].upper()}{100 + i}" for i in range(num_flights)],
+        "Origin": random.choices(origins, k=num_flights),
         "Destination": random.choices(destinations, k=num_flights),
         "Latitude": [random.uniform(-60, 60) for _ in range(num_flights)],
         "Longitude": [random.uniform(-150, 150) for _ in range(num_flights)],
@@ -84,10 +90,12 @@ with tab2:
         st.dataframe(simulated_flights, use_container_width=True)
         st.map(simulated_flights.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}), size=30)
 
-    st.caption("Note: This is simulated data for demo purposes. Real-time API integration planned for Assessment 002.")
+    st.caption("Note: Origin and destination data are simulated for demo purposes. Real-time route data will be integrated in Assessment 002.")
+
 
 # ---------------------------
 # FOOTER
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v1.2 • © 2025 FlySmart")
+
