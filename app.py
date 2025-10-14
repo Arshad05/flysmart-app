@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 import requests
 import base64
+import pydeck as pdk
 
 # ---------------------------
 # APP CONFIG
@@ -16,7 +17,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# OPTIONAL: SOFT BACKGROUND IMAGE
+# OPTIONAL BACKGROUND
 # ---------------------------
 def set_background(image_file: str):
     try:
@@ -39,10 +40,9 @@ def set_background(image_file: str):
             unsafe_allow_html=True
         )
     except FileNotFoundError:
-        # If no background.jpg present, just skip silently
-        pass
+        pass  # Skip silently if no background image
 
-# If you have a background.jpg in the repo, uncomment:
+
 set_background("background.jpg")
 
 # ---------------------------
@@ -53,7 +53,6 @@ with open("airline_info.json", "r") as f:
 
 flights_df = pd.read_csv("flights.csv")
 
-# Quick lookup dict
 sample_flights = {
     row["flight_number"]: {
         "airline": row["airline"],
@@ -91,7 +90,7 @@ if flight_number:
         details = sample_flights[flight_number]
         airline_name = details["airline"]
 
-        # 1) Flight Summary
+        # 1️⃣ Flight Summary
         st.subheader("✈️ Flight Summary")
         st.markdown(
             f"""
@@ -101,10 +100,9 @@ if flight_number:
 **Status:** {details['status']}
             """
         )
-
         st.divider()
 
-        # 2) Countdown to Departure
+        # 2️⃣ Countdown to Departure
         st.subheader("⏰ Time to Departure")
         dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
         remaining = dep_time - datetime.now()
@@ -114,10 +112,9 @@ if flight_number:
             st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
         else:
             st.warning("This flight has already departed or is currently in progress.")
-
         st.divider()
 
-        # 3) Airline Information
+        # 3️⃣ Airline Information
         st.subheader("🧳 Airline Information")
         if airline_name in airline_data:
             info = airline_data[airline_name]
@@ -131,66 +128,38 @@ if flight_number:
             st.markdown(f"[Visit {airline_name} Website]({info['contact']})")
         else:
             st.info("No policy data available for this airline.")
-
         st.divider()
-# 4) Simulated Flight Position (for presentation visuals)
-st.subheader("🌍 Current Flight Position (Simulated)")
 
-import pydeck as pdk
+        # 4️⃣ Simulated Flight Position (for presentation visuals)
+        st.subheader("🌍 Current Flight Position (Simulated)")
 
-# Generate random simulated flight position
-lat = random.uniform(-60, 60)
-lon = random.uniform(-150, 150)
+        lat = random.uniform(-60, 60)
+        lon = random.uniform(-150, 150)
 
-# Define the pydeck layer
-layer = pdk.Layer(
-    "ScatterplotLayer",
-    data=pd.DataFrame({"latitude": [lat], "longitude": [lon]}),
-    get_position='[longitude, latitude]',
-    get_color='[255, 100, 100, 200]',
-    get_radius=100000,
-)
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=pd.DataFrame({"latitude": [lat], "longitude": [lon]}),
+            get_position='[longitude, latitude]',
+            get_color='[255, 100, 100, 200]',
+            get_radius=100000,
+        )
 
-# Define initial map view (zoomed out a bit for global view)
-view_state = pdk.ViewState(
-    latitude=lat,
-    longitude=lon,
-    zoom=2,
-    pitch=0,
-)
+        view_state = pdk.ViewState(
+            latitude=lat,
+            longitude=lon,
+            zoom=2,  # 👈 Zoomed out for visibility
+            pitch=0,
+        )
 
-# Render the map
-st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/light-v9"))
+        st.pydeck_chart(
+            pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/light-v9")
+        )
+        st.divider()
 
-st.divider()
-
-# 5) Live Weather at Destination
-st.subheader("🌤 Live Weather at Destination")
-city = details["destination"].split("(")[0].strip()
-
-try:
-    api_key = st.secrets["weather"]["api_key"]
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-    response = requests.get(url, timeout=10)
-    data = response.json()
-    if data.get("cod") == 200:
-        temp = data["main"]["temp"]
-        desc = data["weather"][0]["description"].title()
-        icon = data["weather"][0]["icon"]
-        cols = st.columns([1, 4])
-        with cols[0]:
-            st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
-        with cols[1]:
-            st.success(f"Weather in {city}: **{temp} °C**, {desc}")
-    else:
-        st.warning("Weather data not available right now.")
-except Exception:
-    st.warning("Unable to fetch live weather data.")
-
-
-        # 5) Live Weather at Destination
+        # 5️⃣ Live Weather at Destination
         st.subheader("🌤 Live Weather at Destination")
         city = details["destination"].split("(")[0].strip()
+
         try:
             api_key = st.secrets["weather"]["api_key"]
             url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
@@ -220,5 +189,3 @@ else:
 # ---------------------------
 st.divider()
 st.caption("Developed as part of a University Project • Prototype v2.5 • © 2025 FlySmart")
-
-
