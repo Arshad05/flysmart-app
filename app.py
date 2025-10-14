@@ -79,7 +79,9 @@ with tab2:
     st.dataframe(simulated_flights, use_container_width=True)
 
     # Map visualization
-    st.map(simulated_flights[["Latitude", "Longitude"]], size=30)
+    # Map visualization (fixed lowercase lat/long)
+    st.map(simulated_flights.rename(columns={"Latitude": "latitude", "Longitude": "longitude"}), size=30)
+
 
     st.caption("Note: This is simulated data for demo purposes. Real-time API integration planned for Assessment 002.")
 
@@ -88,3 +90,4 @@ with tab2:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v1.1 • © 2025 FlySmart")
+
