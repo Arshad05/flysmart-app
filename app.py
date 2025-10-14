@@ -1,4 +1,4 @@
-import streamlit as st  
+import streamlit as st 
 import pandas as pd
 import json
 import random
@@ -33,8 +33,8 @@ def set_background(image_file):
         [data-testid="stHeader"], [data-testid="stToolbar"] {{
             background: rgba(0, 0, 0, 0);
         }}
-        .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 {{
-            color: #ffffff;
+        h1, h2, h3, h4, h5, h6, p, .stMarkdown {{
+            color: #ffffff !important;
             text-shadow: 0 0 6px rgba(0,0,0,0.4);
         }}
         </style>
@@ -43,24 +43,24 @@ def set_background(image_file):
     )
 
 # ---------------------------
-# CARD STYLE CONTAINER
+# CARD STYLE CONTAINER (renders HTML correctly)
 # ---------------------------
-def card_block(content):
-    st.markdown(
-        f"""
-        <div style='background: rgba(255, 255, 255, 0.75);
-                    border-radius: 16px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
-            {content}
-        </div>
-        """,
-        unsafe_allow_html=True   # ✅ This line makes your HTML actually render
-    )
+def card_block(content: str):
+    html = f"""
+    <div style='background: rgba(255, 255, 255, 0.75);
+                border-radius: 16px;
+                padding: 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                color: #000000;'>
+        {content}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)  # ✅ This ensures HTML renders properly
 
-
-# Set the background
+# ---------------------------
+# BACKGROUND SETUP
+# ---------------------------
 set_background("background.jpg")
 
 # ---------------------------
@@ -126,26 +126,20 @@ if flight_number:
             countdown_msg = f"{hours} hours and {minutes} minutes remaining until departure."
         else:
             countdown_msg = "This flight has already departed or is currently in progress."
-
-        card_block(f"""
-        <h3>⏰ Time to Departure</h3>
-        {countdown_msg}
-        """)
+        card_block(f"<h3>⏰ Time to Departure</h3><p>{countdown_msg}</p>")
 
         # 3️⃣ Airline Information
         if airline_name in airline_data:
             info = airline_data[airline_name]
-            airline_info_html = f"""
+            card_block(f"""
             <h3>🧳 Airline Information</h3>
             <b>Check-in:</b> {info['check_in']}<br>
             <b>Baggage Drop:</b> {info['baggage_drop']}<br>
             <b>Boarding:</b> {info['boarding']}<br>
             <a href="{info['contact']}" target="_blank">Visit {airline_name} Website</a>
-            """
+            """)
         else:
-            airline_info_html = "<h3>🧳 Airline Information</h3>No policy data available for this airline."
-
-        card_block(airline_info_html)
+            card_block("<h3>🧳 Airline Information</h3><p>No policy data available for this airline.</p>")
 
         # 4️⃣ Simulated Flight Position (for presentation visuals)
         lat = random.uniform(-60, 60)
@@ -165,17 +159,15 @@ if flight_number:
                 temp = data["main"]["temp"]
                 desc = data["weather"][0]["description"].title()
                 icon = data["weather"][0]["icon"]
-                weather_html = f"""
+                card_block(f"""
                 <h3>🌤 Live Weather at Destination</h3>
                 <img src="http://openweathermap.org/img/wn/{icon}.png" width="80">
                 <p><b>Weather in {city}:</b> {temp} °C, {desc}</p>
-                """
+                """)
             else:
-                weather_html = "<h3>🌤 Live Weather at Destination</h3>Weather data not available right now."
+                card_block("<h3>🌤 Live Weather at Destination</h3><p>Weather data not available right now.</p>")
         except Exception:
-            weather_html = "<h3>🌤 Live Weather at Destination</h3>Unable to fetch live weather data."
-
-        card_block(weather_html)
+            card_block("<h3>🌤 Live Weather at Destination</h3><p>Unable to fetch live weather data.</p>")
 
     else:
         st.error("❌ Flight not found. Please check your flight number and try again.")
@@ -186,6 +178,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v2.3 • © 2025 FlySmart")
-
-
+st.caption("Developed as part of a University Project • Prototype v2.4 • © 2025 FlySmart")
