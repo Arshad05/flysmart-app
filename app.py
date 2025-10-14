@@ -130,21 +130,21 @@ if flight_number:
             st.info("No policy data available for this airline.")
         st.divider()
 
-        # 4️⃣ Simulated Flight Position (✈️ flight icon on OpenStreetMap)
+        # 4️⃣ Simulated Flight Position (✈️ Plane Icon + Fallback Dot)
         st.subheader("🌍 Current Flight Position (Simulated)")
 
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
 
-        # Define a flight icon
+        # ✅ Reliable PNG icon for airplane
         icon_data = {
-            "url": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Plane_icon.svg",
+            "url": "https://cdn-icons-png.flaticon.com/512/681/681494.png",  # PNG plane icon
             "width": 128,
             "height": 128,
             "anchorY": 128,
         }
 
-        # Create DataFrame with coordinates and icon
+        # DataFrame for plane icon
         flight_df = pd.DataFrame(
             [{
                 "lat": lat,
@@ -153,7 +153,7 @@ if flight_number:
             }]
         )
 
-        # Define icon layer
+        # Icon layer (plane)
         icon_layer = pdk.Layer(
             "IconLayer",
             data=flight_df,
@@ -163,15 +163,24 @@ if flight_number:
             pickable=True,
         )
 
-        # View settings
+        # Red dot fallback layer
+        dot_layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=pd.DataFrame({"lat": [lat], "lon": [lon]}),
+            get_position='[lon, lat]',
+            get_color='[255, 0, 0, 255]',
+            get_radius=100000,
+        )
+
+        # Map view setup
         view_state = pdk.ViewState(
             latitude=lat,
             longitude=lon,
-            zoom=1.8,
+            zoom=2,
             pitch=0,
         )
 
-        # Add solid background for visibility
+        # Add solid dark background
         st.markdown(
             """
             <style>
@@ -185,12 +194,12 @@ if flight_number:
             unsafe_allow_html=True
         )
 
-        # Render visible OpenStreetMap (no token needed)
+        # ✅ Render OpenStreetMap with icon + fallback
         st.pydeck_chart(
             pdk.Deck(
-                map_style=None,  # ✅ Removes Mapbox dependency
+                map_style=None,  # OpenStreetMap
                 initial_view_state=view_state,
-                layers=[icon_layer],
+                layers=[dot_layer, icon_layer],
                 tooltip={"text": "✈️ Flight Position"},
             )
         )
@@ -229,4 +238,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v2.9 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v3.0 • © 2025 FlySmart")
