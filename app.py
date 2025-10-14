@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import pandas as pd
 import json
 import random
@@ -16,51 +16,33 @@ st.set_page_config(
 )
 
 # ---------------------------
-# BACKGROUND IMAGE (minimal)
+# OPTIONAL: SOFT BACKGROUND IMAGE
 # ---------------------------
-def set_background(image_file):
-    with open(image_file, "rb") as file:
-        encoded_string = base64.b64encode(file.read()).decode()
-    st.markdown(
-        f"""
-        <style>
-        [data-testid="stAppViewContainer"] {{
-            background-image: url("data:image/png;base64,{encoded_string}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }}
-        [data-testid="stHeader"], [data-testid="stToolbar"] {{
-            background: rgba(0, 0, 0, 0);
-        }}
-        h1, h2, h3, h4, h5, h6, p, .stMarkdown {{
-            color: #ffffff !important;
-            text-shadow: 0 0 6px rgba(0,0,0,0.4);
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+def set_background(image_file: str):
+    try:
+        with open(image_file, "rb") as file:
+            encoded_string = base64.b64encode(file.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            [data-testid="stAppViewContainer"] {{
+                background-image: url("data:image/png;base64,{encoded_string}");
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }}
+            [data-testid="stHeader"], [data-testid="stToolbar"] {{
+                background: rgba(0, 0, 0, 0);
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+    except FileNotFoundError:
+        # If no background.jpg present, just skip silently
+        pass
 
-# ---------------------------
-# CARD STYLE CONTAINER (renders HTML correctly)
-# ---------------------------
-def card_block(content: str):
-    html = f"""
-    <div style='background: rgba(255, 255, 255, 0.75);
-                border-radius: 16px;
-                padding: 20px;
-                margin-bottom: 20px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                color: #000000;'>
-        {content}
-    </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)  # ✅ This ensures HTML renders properly
-
-# ---------------------------
-# BACKGROUND SETUP
-# ---------------------------
+# If you have a background.jpg in the repo, uncomment:
 set_background("background.jpg")
 
 # ---------------------------
@@ -71,6 +53,7 @@ with open("airline_info.json", "r") as f:
 
 flights_df = pd.read_csv("flights.csv")
 
+# Quick lookup dict
 sample_flights = {
     row["flight_number"]: {
         "airline": row["airline"],
@@ -87,7 +70,7 @@ sample_flights = {
 # ---------------------------
 st.title("✈️ FlySmart: Personal Flight Tracker")
 st.caption("Track your flight. Know what matters. Travel stress-free.")
-st.markdown("---")
+st.divider()
 
 # ---------------------------
 # FLIGHT SEARCH
@@ -108,66 +91,78 @@ if flight_number:
         details = sample_flights[flight_number]
         airline_name = details["airline"]
 
-        # 1️⃣ Flight Summary
-        card_block(f"""
-        <h3>✈️ Flight Summary</h3>
-        <b>Flight:</b> {flight_number} — {airline_name}<br>
-        <b>Route:</b> {details['origin']} → {details['destination']}<br>
-        <b>Departure:</b> {details['departure']}<br>
-        <b>Status:</b> {details['status']}
-        """)
+        # 1) Flight Summary
+        st.subheader("✈️ Flight Summary")
+        st.markdown(
+            f"""
+**Flight:** {flight_number} — {airline_name}  
+**Route:** {details['origin']} → {details['destination']}  
+**Departure:** {details['departure']}  
+**Status:** {details['status']}
+            """
+        )
 
-        # 2️⃣ Countdown to Departure
+        st.divider()
+
+        # 2) Countdown to Departure
+        st.subheader("⏰ Time to Departure")
         dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
         remaining = dep_time - datetime.now()
         if remaining.total_seconds() > 0:
             hours, remainder = divmod(int(remaining.total_seconds()), 3600)
             minutes = remainder // 60
-            countdown_msg = f"{hours} hours and {minutes} minutes remaining until departure."
+            st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
         else:
-            countdown_msg = "This flight has already departed or is currently in progress."
-        card_block(f"<h3>⏰ Time to Departure</h3><p>{countdown_msg}</p>")
+            st.warning("This flight has already departed or is currently in progress.")
 
-        # 3️⃣ Airline Information
+        st.divider()
+
+        # 3) Airline Information
+        st.subheader("🧳 Airline Information")
         if airline_name in airline_data:
             info = airline_data[airline_name]
-            card_block(f"""
-            <h3>🧳 Airline Information</h3>
-            <b>Check-in:</b> {info['check_in']}<br>
-            <b>Baggage Drop:</b> {info['baggage_drop']}<br>
-            <b>Boarding:</b> {info['boarding']}<br>
-            <a href="{info['contact']}" target="_blank">Visit {airline_name} Website</a>
-            """)
+            st.markdown(
+                f"""
+- **Check-in:** {info['check_in']}
+- **Baggage Drop:** {info['baggage_drop']}
+- **Boarding:** {info['boarding']}
+                """
+            )
+            st.markdown(f"[Visit {airline_name} Website]({info['contact']})")
         else:
-            card_block("<h3>🧳 Airline Information</h3><p>No policy data available for this airline.</p>")
+            st.info("No policy data available for this airline.")
 
-        # 4️⃣ Simulated Flight Position (for presentation visuals)
+        st.divider()
+
+        # 4) Simulated Flight Position (visual)
+        st.subheader("🌍 Current Flight Position (Simulated)")
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
-        card_block("<h3>🌍 Current Flight Position (Simulated)</h3>")
         st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
 
-        # 5️⃣ Live Weather at Destination
-        city = details["destination"].split("(")[0].strip()
-        api_key = st.secrets["weather"]["api_key"]
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+        st.divider()
 
+        # 5) Live Weather at Destination
+        st.subheader("🌤 Live Weather at Destination")
+        city = details["destination"].split("(")[0].strip()
         try:
-            response = requests.get(url)
+            api_key = st.secrets["weather"]["api_key"]
+            url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+            response = requests.get(url, timeout=10)
             data = response.json()
             if data.get("cod") == 200:
                 temp = data["main"]["temp"]
                 desc = data["weather"][0]["description"].title()
                 icon = data["weather"][0]["icon"]
-                card_block(f"""
-                <h3>🌤 Live Weather at Destination</h3>
-                <img src="http://openweathermap.org/img/wn/{icon}.png" width="80">
-                <p><b>Weather in {city}:</b> {temp} °C, {desc}</p>
-                """)
+                cols = st.columns([1, 4])
+                with cols[0]:
+                    st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
+                with cols[1]:
+                    st.success(f"Weather in {city}: **{temp} °C**, {desc}")
             else:
-                card_block("<h3>🌤 Live Weather at Destination</h3><p>Weather data not available right now.</p>")
+                st.warning("Weather data not available right now.")
         except Exception:
-            card_block("<h3>🌤 Live Weather at Destination</h3><p>Unable to fetch live weather data.</p>")
+            st.warning("Unable to fetch live weather data.")
 
     else:
         st.error("❌ Flight not found. Please check your flight number and try again.")
@@ -177,5 +172,5 @@ else:
 # ---------------------------
 # FOOTER
 # ---------------------------
-st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v2.4 • © 2025 FlySmart")
+st.divider()
+st.caption("Developed as part of a University Project • Prototype v2.5 • © 2025 FlySmart")
