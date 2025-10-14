@@ -30,7 +30,12 @@ st.markdown("---")
 # FLIGHT SEARCH
 # ---------------------------
 st.subheader("🔎 Find Your Flight")
-flight_number = st.text_input("Enter your flight number (e.g. BA102):").strip().upper()
+flight_number = st.selectbox(
+    "Select or enter your flight number:",
+    options=["BA102", "EJ210", "EM777"],
+    index=None,
+    placeholder="Type or select a flight..."
+)
 
 # Mock flight database (for demonstration)
 sample_flights = {
@@ -116,4 +121,5 @@ if flight_number:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v2.1 • © 2025 FlySmart")
+
 
