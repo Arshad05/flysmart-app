@@ -73,13 +73,26 @@ st.divider()
 # ---------------------------
 # FLIGHT SEARCH
 # ---------------------------
-st.subheader("🔎 Find Your Flight")
-flight_number = st.selectbox(
-    "Select or enter your flight number:",
-    options=sorted(flights_df["flight_number"].unique()),
-    index=None,
-    placeholder="Type or select a flight..."
-)
+# 🔎 Flight search field
+search_query = st.text_input(
+    "Enter your flight number or airline (e.g. BA102 or Emirates):",
+    placeholder="Start typing to search..."
+).strip().upper()
+
+# Filter matching flights
+filtered_flights = flights_df[
+    flights_df["flight_number"].str.contains(search_query, case=False, na=False) |
+    flights_df["airline"].str.contains(search_query, case=False, na=False)
+] if search_query else pd.DataFrame()
+
+if not search_query:
+    st.info("Type a flight number or airline to view details.")
+elif filtered_flights.empty:
+    st.warning("❌ No flights found. Try another query.")
+else:
+    flight_number = filtered_flights.iloc[0]["flight_number"]
+    st.success(f"✅ Showing details for flight **{flight_number}**")
+
 
 # ---------------------------
 # MAIN CONTENT
@@ -174,3 +187,4 @@ else:
 # ---------------------------
 st.divider()
 st.caption("Developed as part of a University Project • Prototype v3.2 • © 2025 FlySmart")
+
