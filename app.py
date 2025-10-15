@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# BACKGROUND IMAGE (optional)
+# OPTIONAL BACKGROUND IMAGE
 # ---------------------------
 def set_background(image_file: str):
     try:
@@ -95,20 +95,22 @@ def section_header(title, icon=None):
     with cols[1]:
         st.subheader(title)
 
-def card(content):
-    """Soft white translucent card for section grouping."""
+def card(markdown_content):
+    """Render markdown content inside a styled translucent card."""
     st.markdown(
-        f"""
-        <div style="background-color: rgba(255,255,255,0.8);
-                    padding: 1rem 1.5rem;
-                    border-radius: 12px;
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-                    margin-bottom: 1.2rem;">
-            {content}
-        </div>
+        """
+        <div style="
+            background-color: rgba(255,255,255,0.8);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1.2rem;
+        ">
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
+    st.markdown(markdown_content)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------------------
 # DATA DICTIONARY
@@ -203,82 +205,79 @@ if flight_number and flight_number in sample_flights:
     }.get(details["status"], "blue")
 
     card(f"""
-    <h3>Flight Summary</h3>
-    <b>Flight:</b> {flight_number} — {airline_name}<br>
-    <b>Route:</b> {details['origin']} → {details['destination']}<br>
-    <b>Departure:</b> {details['departure']}<br>
-    <b>Status:</b> <span style="color:{status_color}">{details['status']}</span>
+    ### Flight Summary
+    **Flight:** {flight_number} — {airline_name}  
+    **Route:** {details['origin']} → {details['destination']}  
+    **Departure:** {details['departure']}  
+    **Status:** <span style="color:{status_color}">{details['status']}</span>
     """)
 
     # ⏰ TIME TO DEPARTURE
     dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
     remaining = dep_time - datetime.now()
-    with st.container():
-        section_header("Time to Departure", "assets/departures.png")
-        if remaining.total_seconds() > 0:
-            hours, remainder = divmod(int(remaining.total_seconds()), 3600)
-            minutes = remainder // 60
-            st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
-            st.progress(min((hours / 12), 1))  # simple progress bar toward departure
-        else:
-            st.warning("This flight has already departed or is currently in progress.")
+    section_header("Time to Departure", "assets/departures.png")
+    if remaining.total_seconds() > 0:
+        hours, remainder = divmod(int(remaining.total_seconds()), 3600)
+        minutes = remainder // 60
+        st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
+        st.progress(min((hours / 12), 1))
+    else:
+        st.warning("This flight has already departed or is currently in progress.")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # 🌍 FLIGHT MAP
-    with st.container():
-        st.subheader("Current Flight Position (Simulated)")
-        lat = random.uniform(-60, 60)
-        lon = random.uniform(-150, 150)
-        st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
-        st.caption("This position is simulated for demonstration purposes.")
+    st.subheader("Current Flight Position (Simulated)")
+    lat = random.uniform(-60, 60)
+    lon = random.uniform(-150, 150)
+    st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
+    st.caption("This position is simulated for demonstration purposes.")
 
     # 🧳 AIRLINE INFORMATION
-    with st.container():
-        section_header("Airline Information", "assets/luggage.png")
-        if airline_name in airline_data:
-            info = airline_data[airline_name]
-            card(f"""
-            - **Check-in:** {info['check_in']}  
-            - **Baggage Drop:** {info['baggage_drop']}  
-            - **Boarding:** {info['boarding']}  
-            [Visit {airline_name} Website]({info['contact']})
-            """)
-        else:
-            st.info("No policy data available for this airline.")
+    section_header("Airline Information", "assets/luggage.png")
+    if airline_name in airline_data:
+        info = airline_data[airline_name]
+        card(f"""
+        - **Check-in:** {info['check_in']}
+        - **Baggage Drop:** {info['baggage_drop']}
+        - **Boarding:** {info['boarding']}
+        [Visit {airline_name} Website]({info['contact']})
+        """)
+    else:
+        st.info("No policy data available for this airline.")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # 🌤 LIVE WEATHER
-    with st.container():
-        section_header("Live Weather at Destination", "assets/weather.png")
-        city = normalize_city(details["destination"])
-        if not city:
-            st.warning("No valid city found for this destination.")
-        else:
-            try:
-                api_key = st.secrets["weather"]["api_key"]
-                url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-                response = requests.get(url, timeout=10)
-                data = response.json()
-                if data.get("cod") == 200:
-                    temp = data["main"]["temp"]
-                    desc = data["weather"][0]["description"].title()
-                    icon = data["weather"][0]["icon"]
-                    # Add weather emoji
-                    if "rain" in desc.lower():
-                        emoji = "🌧️"
-                    elif "cloud" in desc.lower():
-                        emoji = "☁️"
-                    elif "clear" in desc.lower():
-                        emoji = "☀️"
-                    else:
-                        emoji = "🌤️"
-                    cols = st.columns([1, 4])
-                    with cols[0]:
-                        st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
-                    with cols[1]:
-                        st.success(f"{emoji} Weather in {city}: **{temp}°C**, {desc}")
+    section_header("Live Weather at Destination", "assets/weather.png")
+    city = normalize_city(details["destination"])
+    if not city:
+        st.warning("No valid city found for this destination.")
+    else:
+        try:
+            api_key = st.secrets["weather"]["api_key"]
+            url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+            response = requests.get(url, timeout=10)
+            data = response.json()
+            if data.get("cod") == 200:
+                temp = data["main"]["temp"]
+                desc = data["weather"][0]["description"].title()
+                icon = data["weather"][0]["icon"]
+                if "rain" in desc.lower():
+                    emoji = "🌧️"
+                elif "cloud" in desc.lower():
+                    emoji = "☁️"
+                elif "clear" in desc.lower():
+                    emoji = "☀️"
                 else:
-                    st.warning(f"Weather not available for '{city}'.")
-            except Exception:
-                st.warning("Unable to fetch live weather data.")
+                    emoji = "🌤️"
+                cols = st.columns([1, 4])
+                with cols[0]:
+                    st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
+                with cols[1]:
+                    st.success(f"{emoji} Weather in {city}: **{temp}°C**, {desc}")
+            else:
+                st.warning(f"Weather not available for '{city}'.")
+        except Exception:
+            st.warning("Unable to fetch live weather data.")
 else:
     st.info("Search or select a flight above to view details.")
 
@@ -286,4 +285,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v4.4 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v4.5 • © 2025 FlySmart")
