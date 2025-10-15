@@ -1,106 +1,26 @@
-import streamlit as st
-import pandas as pd
-import json
-import random
-from datetime import datetime
-import requests
-import base64
-
 # ---------------------------
-# APP CONFIG
-# ---------------------------
-st.set_page_config(
-    page_title="FlySmart | Flight Tracker",
-    page_icon="✈️",
-    layout="centered"
-)
-
-# ---------------------------
-# OPTIONAL BACKGROUND IMAGE
-# ---------------------------
-def set_background(image_file: str):
-    try:
-        with open(image_file, "rb") as file:
-            encoded_string = base64.b64encode(file.read()).decode()
-        st.markdown(
-            f"""
-            <style>
-            [data-testid="stAppViewContainer"] {{
-                background-image: url("data:image/png;base64,{encoded_string}");
-                background-size: cover;
-                background-position: center;
-                background-attachment: fixed;
-            }}
-            [data-testid="stHeader"], [data-testid="stToolbar"] {{
-                background: rgba(0, 0, 0, 0);
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-    except FileNotFoundError:
-        pass
-
-# Optional background
-set_background("background.jpg")
-
-# ---------------------------
-# LOAD DATA
-# ---------------------------
-with open("airline_info.json", "r") as f:
-    airline_data = json.load(f)
-
-flights_df = pd.read_csv("flights.csv")
-
-sample_flights = {
-    row["flight_number"]: {
-        "airline": row["airline"],
-        "origin": row["origin"],
-        "destination": row["destination"],
-        "departure": row["departure"],
-        "status": row["status"]
-    }
-    for _, row in flights_df.iterrows()
-}
-
-# ---------------------------
-# HEADER
-# ---------------------------
-st.title("✈️ FlySmart: Personal Flight Tracker")
-st.caption("Track your flight. Know what matters. Travel stress-free.")
-st.divider()
-
-# ---------------------------
-# FLIGHT SEARCH (Improved)
+# FLIGHT SEARCH (Smart Unified Dropdown)
 # ---------------------------
 st.subheader("🔎 Find Your Flight")
 
+# Build list of all flights formatted for easy searching
+flight_options = [
+    f"{row['flight_number']} — {row['airline']} ({row['origin']} → {row['destination']})"
+    for _, row in flights_df.iterrows()
+]
+
+# User types or picks from dropdown (filtered automatically)
+search_selection = st.selectbox(
+    "Search or select a flight:",
+    options=[""] + flight_options,  # blank option at start
+    index=0,
+    placeholder="Start typing flight number or airline..."
+)
+
+# Extract flight number if one selected
 flight_number = None
-
-search_query = st.text_input(
-    "Enter your flight number or airline (e.g. BA102 or Emirates):",
-    placeholder="Start typing to search..."
-).strip().upper()
-
-# Filter and show top 5 results
-filtered_flights = flights_df[
-    flights_df["flight_number"].str.contains(search_query, case=False, na=False) |
-    flights_df["airline"].str.contains(search_query, case=False, na=False)
-] if search_query else pd.DataFrame()
-
-if not search_query:
-    st.info("Type a flight number or airline to view details.")
-elif filtered_flights.empty:
-    st.warning("❌ No flights found. Try another query.")
-else:
-    top_matches = filtered_flights.head(5)
-    flight_number = st.selectbox(
-        "Select your flight from the matches below:",
-        options=top_matches["flight_number"].tolist(),
-        format_func=lambda x: f"{x} — {sample_flights[x]['airline']} ({sample_flights[x]['origin']} → {sample_flights[x]['destination']})",
-        index=0,
-    )
-    st.success(f"✅ Showing details for flight **{flight_number}**")
+if search_selection:
+    flight_number = search_selection.split(" — ")[0].strip()
 
 # ---------------------------
 # MAIN CONTENT
@@ -181,10 +101,4 @@ if flight_number:
         except Exception:
             st.warning("Unable to fetch live weather data.")
 else:
-    st.stop()  # cleanly end script, prevents duplicate info boxes
-
-# ---------------------------
-# FOOTER
-# ---------------------------
-st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.3 • © 2025 FlySmart")
+    st.info("Select or search for your flight above to view details.")
