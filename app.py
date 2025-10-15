@@ -1,18 +1,88 @@
+import streamlit as st
+import pandas as pd
+import json
+import random
+from datetime import datetime
+import requests
+import base64
+
+# ---------------------------
+# APP CONFIG
+# ---------------------------
+st.set_page_config(
+    page_title="FlySmart | Flight Tracker",
+    page_icon="✈️",
+    layout="centered"
+)
+
+# ---------------------------
+# OPTIONAL BACKGROUND IMAGE
+# ---------------------------
+def set_background(image_file: str):
+    try:
+        with open(image_file, "rb") as file:
+            encoded_string = base64.b64encode(file.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            [data-testid="stAppViewContainer"] {{
+                background-image: url("data:image/png;base64,{encoded_string}");
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }}
+            [data-testid="stHeader"], [data-testid="stToolbar"] {{
+                background: rgba(0, 0, 0, 0);
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+    except FileNotFoundError:
+        pass
+
+# Optional background
+set_background("background.jpg")
+
+# ---------------------------
+# LOAD DATA
+# ---------------------------
+with open("airline_info.json", "r") as f:
+    airline_data = json.load(f)
+
+flights_df = pd.read_csv("flights.csv")
+
+sample_flights = {
+    row["flight_number"]: {
+        "airline": row["airline"],
+        "origin": row["origin"],
+        "destination": row["destination"],
+        "departure": row["departure"],
+        "status": row["status"]
+    }
+    for _, row in flights_df.iterrows()
+}
+
+# ---------------------------
+# HEADER
+# ---------------------------
+st.title("✈️ FlySmart: Personal Flight Tracker")
+st.caption("Track your flight. Know what matters. Travel stress-free.")
+st.divider()
+
 # ---------------------------
 # FLIGHT SEARCH (Improved)
 # ---------------------------
 st.subheader("🔎 Find Your Flight")
 
-# Initialize variable
 flight_number = None
 
-# Search input
 search_query = st.text_input(
     "Enter your flight number or airline (e.g. BA102 or Emirates):",
     placeholder="Start typing to search..."
 ).strip().upper()
 
-# Filter logic for top 5 results
+# Filter and show top 5 results
 filtered_flights = flights_df[
     flights_df["flight_number"].str.contains(search_query, case=False, na=False) |
     flights_df["airline"].str.contains(search_query, case=False, na=False)
@@ -33,9 +103,9 @@ else:
     st.success(f"✅ Showing details for flight **{flight_number}**")
 
 # ---------------------------
-# MAIN CONTENT (cleaned up)
+# MAIN CONTENT
 # ---------------------------
-if flight_number:  # only runs if valid flight selected
+if flight_number:
     if flight_number in sample_flights:
         details = sample_flights[flight_number]
         airline_name = details["airline"]
@@ -111,4 +181,10 @@ if flight_number:  # only runs if valid flight selected
         except Exception:
             st.warning("Unable to fetch live weather data.")
 else:
-    st.info("Type a flight number above to begin tracking.")
+    st.stop()  # cleanly end script, prevents duplicate info boxes
+
+# ---------------------------
+# FOOTER
+# ---------------------------
+st.divider()
+st.caption("Developed as part of a University Project • Prototype v3.3 • © 2025 FlySmart")
