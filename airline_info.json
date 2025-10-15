@@ -88,5 +88,11 @@
     "baggage_drop": "Closes 40 minutes before departure.",
     "boarding": "Gate closes 25 minutes before departure.",
     "contact": "https://www.easyjet.com"
+  },
+  "Gulf Air": {
+    "check_in": "Opens 24 hours before departure; closes 60 minutes before flight.",
+    "baggage_drop": "Closes 45 minutes before departure.",
+    "boarding": "Gate closes 20 minutes before departure.",
+    "contact": "https://www.gulfair.com"
   }
 }
