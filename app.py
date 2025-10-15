@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# OPTIONAL BACKGROUND IMAGE
+# BACKGROUND IMAGE (optional)
 # ---------------------------
 def set_background(image_file: str):
     try:
@@ -33,9 +33,6 @@ def set_background(image_file: str):
                 background-position: center;
                 background-attachment: fixed;
             }}
-            [data-testid="stHeader"], [data-testid="stToolbar"] {{
-                background: rgba(0, 0, 0, 0);
-            }}
             </style>
             """,
             unsafe_allow_html=True
@@ -43,7 +40,6 @@ def set_background(image_file: str):
     except FileNotFoundError:
         pass
 
-# Apply background (optional)
 set_background("background.jpg")
 
 # ---------------------------
@@ -116,22 +112,47 @@ sample_flights = {
 }
 
 # ---------------------------
-# HEADER (FlySmart logo)
+# HEADER (FlySmart logo + title)
 # ---------------------------
 cols = st.columns([0.15, 0.85])
 with cols[0]:
     if os.path.exists("assets/logo.png"):
         st.image("assets/logo.png", width=70)
 with cols[1]:
-    st.title("FlySmart Flight Tracker")
-    st.caption("A clear and simple way to view your flight information.")
-st.markdown("---")
+    st.markdown("<h1 style='margin-bottom:0;'>FlySmart Flight Tracker</h1>", unsafe_allow_html=True)
+    st.caption("A modern way to track your flight effortlessly.")
+
+# Subtle divider and spacing
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ---------------------------
+# STYLING FOR SEARCH BOX CENTERING
+# ---------------------------
+st.markdown(
+    """
+    <style>
+    div[data-testid="stSelectbox"] {
+        text-align: center;
+        width: 70%;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0.8rem 0;
+    }
+    label {
+        display: flex;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # ---------------------------
 # FLIGHT SEARCH
 # ---------------------------
-section_header("Find Your Flight")
-
 flight_options = []
 for _, row in flights_df.iterrows():
     o_code = extract_airport_code(row["origin"])
@@ -143,14 +164,14 @@ for _, row in flights_df.iterrows():
     flight_options.append(display)
 
 search_selection = st.selectbox(
-    "",
+    "Find Your Flight",
     options=[""] + flight_options,
     index=0,
     placeholder="Search by flight number or airline..."
 )
 
 flight_number = search_selection.split(" — ")[0].strip() if search_selection else None
-st.markdown("---")
+st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------
 # MAIN CONTENT
@@ -161,7 +182,7 @@ if flight_number and flight_number in sample_flights:
 
     # ✈️ Flight Summary
     with st.container():
-        st.subheader("Flight Summary")
+        st.markdown("### ✈️ Flight Summary")
         st.markdown(
             f"""
             **Flight:** {flight_number} — {airline_name}  
@@ -170,6 +191,7 @@ if flight_number and flight_number in sample_flights:
             **Status:** {details['status']}
             """
         )
+
     st.markdown("---")
 
     # ⏰ Time to Departure
@@ -183,6 +205,17 @@ if flight_number and flight_number in sample_flights:
             st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
         else:
             st.warning("This flight has already departed or is currently in progress.")
+
+    st.markdown("---")
+
+    # 🌍 Flight Map (restored)
+    with st.container():
+        st.subheader("Current Flight Position (Simulated)")
+        lat = random.uniform(-60, 60)
+        lon = random.uniform(-150, 150)
+        st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
+        st.caption("This position is simulated for demonstration purposes.")
+
     st.markdown("---")
 
     # 🧳 Airline Information
@@ -200,6 +233,7 @@ if flight_number and flight_number in sample_flights:
             st.markdown(f"[Visit {airline_name} Website]({info['contact']})")
         else:
             st.info("No policy data available for this airline.")
+
     st.markdown("---")
 
     # 🌤 Live Weather at Destination
@@ -234,4 +268,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v4.2 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v4.3 • © 2025 FlySmart")
