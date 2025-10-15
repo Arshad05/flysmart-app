@@ -1,23 +1,94 @@
+import streamlit as st
+import pandas as pd
+import json
+import random
+from datetime import datetime
+import requests
+import base64
+
 # ---------------------------
-# FLIGHT SEARCH (Smart Unified Dropdown)
+# APP CONFIG
+# ---------------------------
+st.set_page_config(
+    page_title="FlySmart | Flight Tracker",
+    page_icon="✈️",
+    layout="centered"
+)
+
+# ---------------------------
+# OPTIONAL BACKGROUND IMAGE
+# ---------------------------
+def set_background(image_file: str):
+    try:
+        with open(image_file, "rb") as file:
+            encoded_string = base64.b64encode(file.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            [data-testid="stAppViewContainer"] {{
+                background-image: url("data:image/png;base64,{encoded_string}");
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }}
+            [data-testid="stHeader"], [data-testid="stToolbar"] {{
+                background: rgba(0, 0, 0, 0);
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+    except FileNotFoundError:
+        pass
+
+# Optional background (only if you have one)
+set_background("background.jpg")
+
+# ---------------------------
+# LOAD DATA
+# ---------------------------
+with open("airline_info.json", "r") as f:
+    airline_data = json.load(f)
+
+flights_df = pd.read_csv("flights.csv")
+
+sample_flights = {
+    row["flight_number"]: {
+        "airline": row["airline"],
+        "origin": row["origin"],
+        "destination": row["destination"],
+        "departure": row["departure"],
+        "status": row["status"]
+    }
+    for _, row in flights_df.iterrows()
+}
+
+# ---------------------------
+# HEADER
+# ---------------------------
+st.title("✈️ FlySmart: Personal Flight Tracker")
+st.caption("Track your flight. Know what matters. Travel stress-free.")
+st.divider()
+
+# ---------------------------
+# SMART UNIFIED FLIGHT SEARCH
 # ---------------------------
 st.subheader("🔎 Find Your Flight")
 
-# Build list of all flights formatted for easy searching
+# Build list of flights with full details for searching
 flight_options = [
     f"{row['flight_number']} — {row['airline']} ({row['origin']} → {row['destination']})"
     for _, row in flights_df.iterrows()
 ]
 
-# User types or picks from dropdown (filtered automatically)
+# Unified dropdown (search + select)
 search_selection = st.selectbox(
     "Search or select a flight:",
-    options=[""] + flight_options,  # blank option at start
+    options=[""] + flight_options,  # empty at top
     index=0,
     placeholder="Start typing flight number or airline..."
 )
 
-# Extract flight number if one selected
 flight_number = None
 if search_selection:
     flight_number = search_selection.split(" — ")[0].strip()
@@ -101,4 +172,10 @@ if flight_number:
         except Exception:
             st.warning("Unable to fetch live weather data.")
 else:
-    st.info("Select or search for your flight above to view details.")
+    st.info("Search or select a flight above to view details.")
+
+# ---------------------------
+# FOOTER
+# ---------------------------
+st.divider()
+st.caption("Developed as part of a University Project • Prototype v3.4 • © 2025 FlySmart")
