@@ -43,23 +43,17 @@ def set_background(image_file: str):
     except FileNotFoundError:
         pass
 
-# Optional background
+# Apply background (optional)
 set_background("background.jpg")
 
 # ---------------------------
-# STYLING
+# DEBUG: Check asset files
 # ---------------------------
-st.markdown("""
-<style>
-h1, h2, h3 {
-    font-family: 'Segoe UI', sans-serif;
-}
-div.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-}
-</style>
-""", unsafe_allow_html=True)
+st.markdown("### 🧩 Icon Check (temporary)")
+for img in ["plane.png", "luggage.png", "weather.png"]:
+    path = os.path.join("assets", img)
+    st.write(f"{img}: {'✅ Found' if os.path.exists(path) else '❌ Missing'}")
+st.divider()
 
 # ---------------------------
 # LOAD DATA
@@ -106,27 +100,19 @@ def normalize_city(destination: str) -> str:
     return city
 
 def header_icon(title, icon_path):
-    """Reusable header with small icon."""
+    """Reusable section header with small icon."""
     cols = st.columns([0.08, 0.9])
     with cols[0]:
         if os.path.exists(icon_path):
-            st.image(icon_path, width=30)
+            st.image(icon_path, width=32, use_container_width=False)
+        else:
+            st.write("🟦")  # fallback marker if icon missing
     with cols[1]:
         st.subheader(title)
 
 # ---------------------------
-# AIRLINE LOGOS
+# FLIGHT DATA DICTIONARY
 # ---------------------------
-logo_map = {
-    "Emirates": "assets/emirates.png",
-    "British Airways": "assets/british_airways.png",
-    "Qatar Airways": "assets/qatar.png",
-    "Etihad Airways": "assets/etihad.png",
-    "Lufthansa": "assets/lufthansa.png",
-    "Singapore Airlines": "assets/singapore.png"
-}
-
-# Pre-compute flight lookup
 sample_flights = {
     row["flight_number"]: {
         "airline": row["airline"],
@@ -150,7 +136,7 @@ st.divider()
 # ---------------------------
 # FLIGHT SEARCH
 # ---------------------------
-header_icon("Find Your Flight", "assets/search.png")
+header_icon("Find Your Flight", "assets/plane.png")
 
 flight_options = []
 for _, row in flights_df.iterrows():
@@ -180,24 +166,18 @@ if flight_number and flight_number in sample_flights:
 
     # ✈️ Flight Summary
     header_icon("Flight Summary", "assets/plane.png")
-    cols = st.columns([0.25, 0.75])
-    with cols[0]:
-        logo_path = logo_map.get(airline_name)
-        if logo_path and os.path.exists(logo_path):
-            st.image(logo_path, width=100)
-    with cols[1]:
-        st.markdown(
-            f"""
+    st.markdown(
+        f"""
 **Flight:** {flight_number} — {airline_name}  
 **Route:** {details['origin']} → {details['destination']}  
 **Departure:** {details['departure']}  
 **Status:** {details['status']}
-            """
-        )
+        """
+    )
     st.divider()
 
     # ⏰ Countdown to Departure
-    header_icon("Time to Departure", "assets/clock.png")
+    header_icon("Time to Departure", "assets/clock.png" if os.path.exists("assets/clock.png") else "assets/plane.png")
     dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
     remaining = dep_time - datetime.now()
     if remaining.total_seconds() > 0:
@@ -225,7 +205,7 @@ if flight_number and flight_number in sample_flights:
     st.divider()
 
     # 🌍 Simulated Flight Position
-    header_icon("Current Flight Position (Simulated)", "assets/world.png")
+    header_icon("Current Flight Position (Simulated)", "assets/plane.png")
     lat = random.uniform(-60, 60)
     lon = random.uniform(-150, 150)
     st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
@@ -265,4 +245,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.8 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v3.9 • © 2025 FlySmart")
