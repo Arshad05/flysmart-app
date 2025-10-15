@@ -87,12 +87,24 @@ def normalize_city(destination: str) -> str:
     return city
 
 def section_header(title, icon=None):
-    """Header with optional small icon."""
-    cols = st.columns([0.08, 0.92])
-    with cols[0]:
-        if icon and os.path.exists(icon):
-            st.image(icon, width=30)
-    with cols[1]:
+    """Header with perfectly aligned icon and title."""
+    if icon and os.path.exists(icon):
+        st.markdown(
+            f"""
+            <div style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 0.5rem;
+                margin-top: 0.5rem;
+            ">
+                <img src="data:image/png;base64,{base64.b64encode(open(icon, 'rb').read()).decode()}" width="26" height="26">
+                <h3 style="margin: 0; padding: 0; font-weight: 600;">{title}</h3>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
         st.subheader(title)
 
 # ---------------------------
@@ -180,7 +192,7 @@ if flight_number and flight_number in sample_flights:
     airline_name = details["airline"]
 
     # --- Flight Summary ---
-    st.subheader("Flight Summary")
+    section_header("Flight Summary")
     st.markdown(
         f"""
         **Flight:** {flight_number} — {airline_name}  
@@ -205,7 +217,7 @@ if flight_number and flight_number in sample_flights:
     st.divider()
 
     # --- Map ---
-    st.subheader("Current Flight Position (Simulated)")
+    section_header("Current Flight Position (Simulated)")
     lat = random.uniform(-60, 60)
     lon = random.uniform(-150, 150)
     st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
@@ -218,9 +230,9 @@ if flight_number and flight_number in sample_flights:
         info = airline_data[airline_name]
         st.markdown(
             f"""
-            - **Check-in:** {info['check_in']}
-            - **Baggage Drop:** {info['baggage_drop']}
-            - **Boarding:** {info['boarding']}
+            - **Check-in:** {info['check_in']}  
+            - **Baggage Drop:** {info['baggage_drop']}  
+            - **Boarding:** {info['boarding']}  
             [Visit {airline_name} Website]({info['contact']})
             """
         )
@@ -260,4 +272,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v4.7 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v4.8 • © 2025 FlySmart")
