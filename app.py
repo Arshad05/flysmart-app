@@ -6,6 +6,7 @@ from datetime import datetime
 import requests
 import base64
 import re
+import os
 
 # ---------------------------
 # APP CONFIG
@@ -42,8 +43,23 @@ def set_background(image_file: str):
     except FileNotFoundError:
         pass
 
-# Optional background (only if available)
+# Optional background
 set_background("background.jpg")
+
+# ---------------------------
+# STYLING
+# ---------------------------
+st.markdown("""
+<style>
+h1, h2, h3 {
+    font-family: 'Segoe UI', sans-serif;
+}
+div.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------------------
 # LOAD DATA
@@ -62,68 +78,55 @@ def extract_airport_code(location: str) -> str:
     m = IATA_PATTERN.search(str(location))
     return m.group(1) if m else ""
 
-# Words that indicate we’ve moved into the airport name (not the city)
 AIRPORT_TOKENS = {
-    # generic
-    "intl", "international", "airport", "airpt", "aeropuerto", "aeroporto",
-    "aerodrome", "field", "terminal",
-    # common specific names (lowercased)
-    "heathrow", "gatwick", "stansted", "luton", "city",
-    "jfk", "laguardia", "newark",
-    "o'hare", "ohare", "midway", "dulles", "schiphol",
-    "charles", "de", "gaulle", "orly",
-    "barajas", "el", "prat", "fiumicino", "ciampino",
-    "narita", "haneda", "incheon", "changi",
-    "zaventem", "songshan", "taoyuan", "suvarnabhumi", "don", "mueang",
-    "chhatrapati", "shivaji", "kempegowda", "indira", "gandhi",
-    "hartsfield–jackson", "hartsfield-jackson", "hartsfield", "jackson",
-    "king", "abdulaziz", "maktoum"
+    "intl", "international", "airport", "aeropuerto", "aeroporto", "field",
+    "heathrow", "gatwick", "jfk", "laguardia", "newark", "dulles", "schiphol",
+    "charles", "gaulle", "orly", "barajas", "fiumicino", "ciampino",
+    "narita", "haneda", "incheon", "changi", "don", "mueang", "maktoum"
 }
 
 def normalize_city(destination: str) -> str:
-    """
-    Convert strings like:
-      'London Heathrow (LHR)' -> 'London'
-      'New York JFK' -> 'New York'
-      'Dubai Intl (DXB)' -> 'Dubai'
-      'Los Angeles LAX' -> 'Los Angeles'
-    Always returns a best-effort city name for weather APIs.
-    """
-    s = str(destination)
-
-    # Remove anything in parentheses, e.g. (LHR)
-    s = re.sub(r"\(.*?\)", "", s)
-
-    # Replace hyphens/en-dashes with spaces, collapse spaces
-    s = s.replace("–", " ").replace("-", " ")
+    s = re.sub(r"\(.*?\)", "", str(destination))
+    s = re.sub(r"[-–]", " ", s)
     s = re.sub(r"\s{2,}", " ", s).strip()
 
-    if not s:
-        return ""
-
     tokens = s.split()
-
-    # If last token looks like an IATA code (3 uppercase letters), drop it
     if tokens and len(tokens[-1]) == 3 and tokens[-1].isupper():
         tokens = tokens[:-1]
 
-    # Build city token-by-token until we hit an airport token
     city_tokens = []
     for t in tokens:
-        tl = t.lower()
-        if tl in AIRPORT_TOKENS:
+        if t.lower() in AIRPORT_TOKENS:
             break
         city_tokens.append(t)
 
-    # Fallbacks: if we stripped everything due to tokens, keep the first token(s)
     city = " ".join(city_tokens).strip()
     if not city and tokens:
-        # Try first two tokens (handles 'New York', 'Los Angeles', etc.)
         city = " ".join(tokens[:2]).strip()
-
     return city
 
-# Pre-compute a lookup dict (also stash codes for display)
+def header_icon(title, icon_path):
+    """Reusable header with small icon."""
+    cols = st.columns([0.08, 0.9])
+    with cols[0]:
+        if os.path.exists(icon_path):
+            st.image(icon_path, width=30)
+    with cols[1]:
+        st.subheader(title)
+
+# ---------------------------
+# AIRLINE LOGOS
+# ---------------------------
+logo_map = {
+    "Emirates": "assets/emirates.png",
+    "British Airways": "assets/british_airways.png",
+    "Qatar Airways": "assets/qatar.png",
+    "Etihad Airways": "assets/etihad.png",
+    "Lufthansa": "assets/lufthansa.png",
+    "Singapore Airlines": "assets/singapore.png"
+}
+
+# Pre-compute flight lookup
 sample_flights = {
     row["flight_number"]: {
         "airline": row["airline"],
@@ -140,20 +143,19 @@ sample_flights = {
 # ---------------------------
 # HEADER
 # ---------------------------
-st.title("✈️ FlySmart: Personal Flight Tracker")
-st.caption("Track your flight. Know what matters. Travel stress-free.")
+st.title("FlySmart Flight Tracker")
+st.caption("Professional flight overview and real-time insights for travelers.")
 st.divider()
 
 # ---------------------------
-# FLIGHT SEARCH (Cleaner, single-line with IATA codes only in brackets)
+# FLIGHT SEARCH
 # ---------------------------
-st.subheader("🔎 Find Your Flight")
+header_icon("Find Your Flight", "assets/search.png")
 
 flight_options = []
 for _, row in flights_df.iterrows():
     o_code = extract_airport_code(row["origin"])
     d_code = extract_airport_code(row["destination"])
-    # Only show IATA codes in brackets
     if o_code and d_code:
         display = f"{row['flight_number']} — {row['airline']} ({o_code} → {d_code})"
     else:
@@ -161,15 +163,13 @@ for _, row in flights_df.iterrows():
     flight_options.append(display)
 
 search_selection = st.selectbox(
-    "Search or select a flight:",
+    "",
     options=[""] + flight_options,
     index=0,
-    placeholder="Start typing flight number or airline..."
+    placeholder="Search by flight number or airline..."
 )
 
-flight_number = None
-if search_selection:
-    flight_number = search_selection.split(" — ")[0].strip()
+flight_number = search_selection.split(" — ")[0].strip() if search_selection else None
 
 # ---------------------------
 # MAIN CONTENT
@@ -179,19 +179,25 @@ if flight_number and flight_number in sample_flights:
     airline_name = details["airline"]
 
     # ✈️ Flight Summary
-    st.subheader("✈️ Flight Summary")
-    st.markdown(
-        f"""
+    header_icon("Flight Summary", "assets/plane.png")
+    cols = st.columns([0.25, 0.75])
+    with cols[0]:
+        logo_path = logo_map.get(airline_name)
+        if logo_path and os.path.exists(logo_path):
+            st.image(logo_path, width=100)
+    with cols[1]:
+        st.markdown(
+            f"""
 **Flight:** {flight_number} — {airline_name}  
 **Route:** {details['origin']} → {details['destination']}  
 **Departure:** {details['departure']}  
 **Status:** {details['status']}
-        """
-    )
+            """
+        )
     st.divider()
 
     # ⏰ Countdown to Departure
-    st.subheader("⏰ Time to Departure")
+    header_icon("Time to Departure", "assets/clock.png")
     dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
     remaining = dep_time - datetime.now()
     if remaining.total_seconds() > 0:
@@ -203,7 +209,7 @@ if flight_number and flight_number in sample_flights:
     st.divider()
 
     # 🧳 Airline Information
-    st.subheader("🧳 Airline Information")
+    header_icon("Airline Information", "assets/luggage.png")
     if airline_name in airline_data:
         info = airline_data[airline_name]
         st.markdown(
@@ -219,18 +225,16 @@ if flight_number and flight_number in sample_flights:
     st.divider()
 
     # 🌍 Simulated Flight Position
-    st.subheader("🌍 Current Flight Position (Simulated)")
+    header_icon("Current Flight Position (Simulated)", "assets/world.png")
     lat = random.uniform(-60, 60)
     lon = random.uniform(-150, 150)
     st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
     st.caption("This position is simulated for demonstration purposes.")
     st.divider()
 
-    # 🌤 Live Weather at Destination (Fool-proof city extraction)
-    st.subheader("🌤 Live Weather at Destination")
-
+    # 🌤 Live Weather at Destination
+    header_icon("Live Weather at Destination", "assets/weather.png")
     city = normalize_city(details["destination"])
-
     st.caption(f"Fetching live weather for: **{city or 'Unknown'}**")
 
     if not city:
@@ -261,4 +265,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.7 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v3.8 • © 2025 FlySmart")
