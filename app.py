@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# OPTIONAL BACKGROUND IMAGE
+# BACKGROUND IMAGE
 # ---------------------------
 def set_background(image_file: str):
     try:
@@ -95,25 +95,8 @@ def section_header(title, icon=None):
     with cols[1]:
         st.subheader(title)
 
-def card(markdown_content):
-    """Render markdown content inside a styled translucent card."""
-    st.markdown(
-        """
-        <div style="
-            background-color: rgba(255,255,255,0.85);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            margin-bottom: 1.5rem;
-        ">
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(markdown_content)
-    st.markdown("</div>", unsafe_allow_html=True)
-
 # ---------------------------
-# DATA DICTIONARY
+# FLIGHT DATA
 # ---------------------------
 sample_flights = {
     row["flight_number"]: {
@@ -142,7 +125,7 @@ with cols[1]:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------
-# STYLING FOR SEARCH
+# SEARCH BAR STYLING
 # ---------------------------
 st.markdown(
     """
@@ -196,26 +179,22 @@ if flight_number and flight_number in sample_flights:
     details = sample_flights[flight_number]
     airline_name = details["airline"]
 
-    # ✈️ FLIGHT SUMMARY
-    status_color = {
-        "On Time": "green",
-        "Boarding": "orange",
-        "Delayed": "red",
-        "Cancelled": "gray"
-    }.get(details["status"], "blue")
+    # --- Flight Summary ---
+    st.subheader("Flight Summary")
+    st.markdown(
+        f"""
+        **Flight:** {flight_number} — {airline_name}  
+        **Route:** {details['origin']} → {details['destination']}  
+        **Departure:** {details['departure']}  
+        **Status:** {details['status']}
+        """
+    )
+    st.divider()
 
-    card(f"""
-    ### Flight Summary
-    **Flight:** {flight_number} — {airline_name}  
-    **Route:** {details['origin']} → {details['destination']}  
-    **Departure:** {details['departure']}  
-    **Status:** <font color="{status_color}"><b>{details['status']}</b></font>
-    """)
-
-    # ⏰ TIME TO DEPARTURE
+    # --- Time to Departure ---
+    section_header("Time to Departure", "assets/departures.png")
     dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
     remaining = dep_time - datetime.now()
-    section_header("Time to Departure", "assets/departures.png")
     if remaining.total_seconds() > 0:
         hours, remainder = divmod(int(remaining.total_seconds()), 3600)
         minutes = remainder // 60
@@ -223,30 +202,33 @@ if flight_number and flight_number in sample_flights:
         st.progress(min((hours / 12), 1))
     else:
         st.warning("This flight has already departed or is currently in progress.")
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
 
-    # 🌍 FLIGHT MAP
+    # --- Map ---
     st.subheader("Current Flight Position (Simulated)")
     lat = random.uniform(-60, 60)
     lon = random.uniform(-150, 150)
     st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
     st.caption("This position is simulated for demonstration purposes.")
+    st.divider()
 
-    # 🧳 AIRLINE INFORMATION
+    # --- Airline Information ---
     section_header("Airline Information", "assets/luggage.png")
     if airline_name in airline_data:
         info = airline_data[airline_name]
-        card(f"""
-        - **Check-in:** {info['check_in']}
-        - **Baggage Drop:** {info['baggage_drop']}
-        - **Boarding:** {info['boarding']}
-        [Visit {airline_name} Website]({info['contact']})
-        """)
+        st.markdown(
+            f"""
+            - **Check-in:** {info['check_in']}
+            - **Baggage Drop:** {info['baggage_drop']}
+            - **Boarding:** {info['boarding']}
+            [Visit {airline_name} Website]({info['contact']})
+            """
+        )
     else:
         st.info("No policy data available for this airline.")
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
 
-    # 🌤 LIVE WEATHER
+    # --- Live Weather ---
     section_header("Live Weather at Destination", "assets/weather.png")
     city = normalize_city(details["destination"])
     if not city:
@@ -261,23 +243,16 @@ if flight_number and flight_number in sample_flights:
                 temp = data["main"]["temp"]
                 desc = data["weather"][0]["description"].title()
                 icon = data["weather"][0]["icon"]
-                if "rain" in desc.lower():
-                    emoji = "🌧️"
-                elif "cloud" in desc.lower():
-                    emoji = "☁️"
-                elif "clear" in desc.lower():
-                    emoji = "☀️"
-                else:
-                    emoji = "🌤️"
                 cols = st.columns([1, 4])
                 with cols[0]:
                     st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
                 with cols[1]:
-                    st.success(f"{emoji} Weather in {city}: **{temp}°C**, {desc}")
+                    st.success(f"Weather in {city}: **{temp}°C**, {desc}")
             else:
                 st.warning(f"Weather not available for '{city}'.")
         except Exception:
             st.warning("Unable to fetch live weather data.")
+
 else:
     st.info("Search or select a flight above to view details.")
 
@@ -285,4 +260,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v4.6 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v4.7 • © 2025 FlySmart")
