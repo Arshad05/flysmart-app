@@ -1,20 +1,92 @@
 {
   "British Airways": {
     "check_in": "Opens 24 hours before departure; closes 1 hour before flight.",
-    "baggage_drop": "Closes 45 minutes before departure.",
+    "baggage_drop": "Closes 45 minutes before departure (60 minutes for long-haul).",
     "boarding": "Gate closes 20 minutes before departure.",
     "contact": "https://www.britishairways.com"
-  },
-  "EasyJet": {
-    "check_in": "Opens 30 days before departure; closes 2 hours before flight.",
-    "baggage_drop": "Closes 40 minutes before departure.",
-    "boarding": "Gate closes 30 minutes before departure.",
-    "contact": "https://www.easyjet.com"
   },
   "Emirates": {
     "check_in": "Opens 48 hours before departure; closes 90 minutes before flight.",
     "baggage_drop": "Closes 60 minutes before departure.",
     "boarding": "Gate closes 20 minutes before departure.",
     "contact": "https://www.emirates.com"
+  },
+  "Qatar Airways": {
+    "check_in": "Opens 36 hours before departure; closes 60 minutes before flight.",
+    "baggage_drop": "Closes 45 minutes before departure.",
+    "boarding": "Gate closes 20 minutes before departure.",
+    "contact": "https://www.qatarairways.com"
+  },
+  "Singapore Airlines": {
+    "check_in": "Opens 48 hours before departure; closes 1 hour before flight.",
+    "baggage_drop": "Closes 50 minutes before departure.",
+    "boarding": "Gate closes 10 minutes before departure.",
+    "contact": "https://www.singaporeair.com"
+  },
+  "American Airlines": {
+    "check_in": "Opens 24 hours before departure; closes 45 minutes before flight (90 minutes for international).",
+    "baggage_drop": "Closes 45 minutes before departure (international: 60 minutes).",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.aa.com"
+  },
+  "United Airlines": {
+    "check_in": "Opens 24 hours before departure; closes 60 minutes before international flights.",
+    "baggage_drop": "Closes 45 minutes before departure (international: 60 minutes).",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.united.com"
+  },
+  "Delta Airlines": {
+    "check_in": "Opens 24 hours before departure; closes 60 minutes before international flights.",
+    "baggage_drop": "Closes 45 minutes before departure.",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.delta.com"
+  },
+  "Lufthansa": {
+    "check_in": "Opens 30 hours before departure; closes 60 minutes before flight.",
+    "baggage_drop": "Closes 45 minutes before departure.",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.lufthansa.com"
+  },
+  "Air France": {
+    "check_in": "Opens 30 hours before departure; closes 60 minutes before flight.",
+    "baggage_drop": "Closes 40 minutes before departure.",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.airfrance.com"
+  },
+  "Cathay Pacific": {
+    "check_in": "Opens 48 hours before departure; closes 60 minutes before flight.",
+    "baggage_drop": "Closes 50 minutes before departure.",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.cathaypacific.com"
+  },
+  "Air New Zealand": {
+    "check_in": "Opens 24 hours before departure; closes 60 minutes before flight.",
+    "baggage_drop": "Closes 45 minutes before departure.",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.airnewzealand.com"
+  },
+  "Virgin Australia": {
+    "check_in": "Opens 48 hours before departure; closes 45 minutes before flight.",
+    "baggage_drop": "Closes 30 minutes before departure (international: 60 minutes).",
+    "boarding": "Gate closes 10 minutes before departure.",
+    "contact": "https://www.virginaustralia.com"
+  },
+  "Qantas Airways": {
+    "check_in": "Opens 24 hours before departure; closes 60 minutes before international flights.",
+    "baggage_drop": "Closes 45 minutes before departure.",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.qantas.com"
+  },
+  "KLM": {
+    "check_in": "Opens 30 hours before departure; closes 60 minutes before flight.",
+    "baggage_drop": "Closes 40 minutes before departure.",
+    "boarding": "Gate closes 15 minutes before departure.",
+    "contact": "https://www.klm.com"
+  },
+  "EasyJet": {
+    "check_in": "Opens 30 days before departure; closes 2 hours before flight.",
+    "baggage_drop": "Closes 40 minutes before departure.",
+    "boarding": "Gate closes 25 minutes before departure.",
+    "contact": "https://www.easyjet.com"
   }
 }
