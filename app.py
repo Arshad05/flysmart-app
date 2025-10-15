@@ -100,11 +100,11 @@ def card(markdown_content):
     st.markdown(
         """
         <div style="
-            background-color: rgba(255,255,255,0.8);
+            background-color: rgba(255,255,255,0.85);
             padding: 1rem 1.5rem;
             border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            margin-bottom: 1.2rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
         ">
         """,
         unsafe_allow_html=True,
@@ -209,7 +209,7 @@ if flight_number and flight_number in sample_flights:
     **Flight:** {flight_number} — {airline_name}  
     **Route:** {details['origin']} → {details['destination']}  
     **Departure:** {details['departure']}  
-    **Status:** <span style="color:{status_color}">{details['status']}</span>
+    **Status:** <font color="{status_color}"><b>{details['status']}</b></font>
     """)
 
     # ⏰ TIME TO DEPARTURE
@@ -285,4 +285,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v4.5 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v4.6 • © 2025 FlySmart")
