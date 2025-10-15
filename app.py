@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 import requests
 import base64
+import re
 
 # ---------------------------
 # APP CONFIG
@@ -41,7 +42,7 @@ def set_background(image_file: str):
     except FileNotFoundError:
         pass
 
-# Optional background (only if you have one)
+# Optional background (only if available)
 set_background("background.jpg")
 
 # ---------------------------
@@ -52,13 +53,20 @@ with open("airline_info.json", "r") as f:
 
 flights_df = pd.read_csv("flights.csv")
 
+# Helper: Extract airport code in brackets if it exists, otherwise leave blank
+def extract_airport_code(location: str):
+    match = re.search(r"\((\w{3})\)", location)
+    return match.group(1) if match else ""
+
 sample_flights = {
     row["flight_number"]: {
         "airline": row["airline"],
         "origin": row["origin"],
         "destination": row["destination"],
         "departure": row["departure"],
-        "status": row["status"]
+        "status": row["status"],
+        "origin_code": extract_airport_code(row["origin"]),
+        "dest_code": extract_airport_code(row["destination"])
     }
     for _, row in flights_df.iterrows()
 }
@@ -71,17 +79,21 @@ st.caption("Track your flight. Know what matters. Travel stress-free.")
 st.divider()
 
 # ---------------------------
-# SMART FLIGHT SEARCH
+# FLIGHT SEARCH (Cleaner display)
 # ---------------------------
 st.subheader("🔎 Find Your Flight")
 
-# Build list of flights with full info
-flight_options = [
-    f"{row['flight_number']} — {row['airline']} ({row['origin']} → {row['destination']})"
-    for _, row in flights_df.iterrows()
-]
+flight_options = []
+for _, row in flights_df.iterrows():
+    origin_code = extract_airport_code(row["origin"])
+    dest_code = extract_airport_code(row["destination"])
+    display = f"{row['flight_number']} — {row['airline']}"
+    if origin_code and dest_code:
+        display += f" ({origin_code} → {dest_code})"
+    elif row['origin'] and row['destination']:
+        display += f" ({row['origin']} → {row['destination']})"
+    flight_options.append(display)
 
-# Unified dropdown
 search_selection = st.selectbox(
     "Search or select a flight:",
     options=[""] + flight_options,
@@ -149,17 +161,22 @@ if flight_number:
         st.caption("This position is simulated for demonstration purposes.")
         st.divider()
 
-        # 🌤 Live Weather at Destination (Improved)
+        # 🌤 Live Weather at Destination (Smarter City Cleanup)
         st.subheader("🌤 Live Weather at Destination")
 
-        # Clean and normalize city name
         raw_city = details["destination"]
-        city = raw_city.split("(")[0].strip()
-        if len(city.split()) > 3 or any(x in city for x in ["Intl", "International", "Airport"]):
-            city = city.split()[0]
+        # Remove airport codes and common extra tokens
+        city = re.sub(r"\(.*?\)", "", raw_city)  # remove (JFK)
+        city = re.sub(r"\b(Intl|International|Airport|Airpt|Aeropuerto|Aeroporto)\b", "", city, flags=re.IGNORECASE)
+        city = re.sub(r"\s{2,}", " ", city).strip()
+
+        # Handle cases like “New York JFK”
+        tokens = city.split()
+        if len(tokens) > 1 and tokens[-1].isupper() and len(tokens[-1]) == 3:
+            city = " ".join(tokens[:-1]).strip()
+
         city = city.replace("-", " ").strip()
 
-        # Display what city is being queried (debugging)
         st.caption(f"Fetching live weather for: **{city}**")
 
         if not city or city.lower() in ["n/a", "-", "unknown"]:
@@ -181,7 +198,7 @@ if flight_number:
                         st.success(f"Weather in {city}: **{temp} °C**, {desc}")
                 else:
                     st.warning(f"Weather not available for '{city}'.")
-            except Exception as e:
+            except Exception:
                 st.warning("Unable to fetch live weather data.")
     else:
         st.error("❌ Flight not found. Please check your flight number and try again.")
@@ -192,4 +209,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.5 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v3.6 • © 2025 FlySmart")
