@@ -47,15 +47,6 @@ def set_background(image_file: str):
 set_background("background.jpg")
 
 # ---------------------------
-# DEBUG: Check asset files
-# ---------------------------
-st.markdown("### 🧩 Icon Check (temporary)")
-for img in ["logo.png", "plane.png", "luggage.png", "weather.png", "departures.png"]:
-    path = os.path.join("assets", img)
-    st.write(f"{img}: {'✅ Found' if os.path.exists(path) else '❌ Missing'}")
-st.divider()
-
-# ---------------------------
 # LOAD DATA
 # ---------------------------
 with open("airline_info.json", "r") as f:
@@ -99,19 +90,17 @@ def normalize_city(destination: str) -> str:
         city = " ".join(tokens[:2]).strip()
     return city
 
-def header_icon(title, icon_path):
-    """Reusable section header with small icon."""
-    cols = st.columns([0.08, 0.9])
+def section_header(title, icon=None):
+    """Header row with optional icon."""
+    cols = st.columns([0.08, 0.92])
     with cols[0]:
-        if os.path.exists(icon_path):
-            st.image(icon_path, width=32, use_container_width=False)
-        else:
-            st.write("🟦")  # fallback marker if icon missing
+        if icon and os.path.exists(icon):
+            st.image(icon, width=30)
     with cols[1]:
         st.subheader(title)
 
 # ---------------------------
-# FLIGHT DATA DICTIONARY
+# DATA DICTIONARY
 # ---------------------------
 sample_flights = {
     row["flight_number"]: {
@@ -127,24 +116,21 @@ sample_flights = {
 }
 
 # ---------------------------
-# HEADER (with FlySmart logo)
+# HEADER (FlySmart logo)
 # ---------------------------
-logo_path = "assets/logo.png"
-
 cols = st.columns([0.15, 0.85])
 with cols[0]:
-    if os.path.exists(logo_path):
-        st.image(logo_path, width=60, use_container_width=False)
+    if os.path.exists("assets/logo.png"):
+        st.image("assets/logo.png", width=70)
 with cols[1]:
     st.title("FlySmart Flight Tracker")
-    st.caption("Professional flight overview and real-time insights for travelers.")
-
-st.divider()
+    st.caption("A clear and simple way to view your flight information.")
+st.markdown("---")
 
 # ---------------------------
 # FLIGHT SEARCH
 # ---------------------------
-header_icon("Find Your Flight", "assets/plane.png")
+section_header("Find Your Flight")
 
 flight_options = []
 for _, row in flights_df.iterrows():
@@ -164,6 +150,7 @@ search_selection = st.selectbox(
 )
 
 flight_number = search_selection.split(" — ")[0].strip() if search_selection else None
+st.markdown("---")
 
 # ---------------------------
 # MAIN CONTENT
@@ -173,84 +160,78 @@ if flight_number and flight_number in sample_flights:
     airline_name = details["airline"]
 
     # ✈️ Flight Summary
-    header_icon("Flight Summary", "assets/plane.png")
-    st.markdown(
-        f"""
-**Flight:** {flight_number} — {airline_name}  
-**Route:** {details['origin']} → {details['destination']}  
-**Departure:** {details['departure']}  
-**Status:** {details['status']}
-        """
-    )
-    st.divider()
-
-    # ⏰ Countdown to Departure (new icon)
-    header_icon("Time to Departure", "assets/departures.png")
-    dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
-    remaining = dep_time - datetime.now()
-    if remaining.total_seconds() > 0:
-        hours, remainder = divmod(int(remaining.total_seconds()), 3600)
-        minutes = remainder // 60
-        st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
-    else:
-        st.warning("This flight has already departed or is currently in progress.")
-    st.divider()
-
-    # 🧳 Airline Information
-    header_icon("Airline Information", "assets/luggage.png")
-    if airline_name in airline_data:
-        info = airline_data[airline_name]
+    with st.container():
+        st.subheader("Flight Summary")
         st.markdown(
             f"""
-- **Check-in:** {info['check_in']}
-- **Baggage Drop:** {info['baggage_drop']}
-- **Boarding:** {info['boarding']}
+            **Flight:** {flight_number} — {airline_name}  
+            **Route:** {details['origin']} → {details['destination']}  
+            **Departure:** {details['departure']}  
+            **Status:** {details['status']}
             """
         )
-        st.markdown(f"[Visit {airline_name} Website]({info['contact']})")
-    else:
-        st.info("No policy data available for this airline.")
-    st.divider()
+    st.markdown("---")
 
-    # 🌍 Simulated Flight Position
-    header_icon("Current Flight Position (Simulated)", "assets/plane.png")
-    lat = random.uniform(-60, 60)
-    lon = random.uniform(-150, 150)
-    st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
-    st.caption("This position is simulated for demonstration purposes.")
-    st.divider()
+    # ⏰ Time to Departure
+    with st.container():
+        section_header("Time to Departure", "assets/departures.png")
+        dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
+        remaining = dep_time - datetime.now()
+        if remaining.total_seconds() > 0:
+            hours, remainder = divmod(int(remaining.total_seconds()), 3600)
+            minutes = remainder // 60
+            st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
+        else:
+            st.warning("This flight has already departed or is currently in progress.")
+    st.markdown("---")
+
+    # 🧳 Airline Information
+    with st.container():
+        section_header("Airline Information", "assets/luggage.png")
+        if airline_name in airline_data:
+            info = airline_data[airline_name]
+            st.markdown(
+                f"""
+                - **Check-in:** {info['check_in']}  
+                - **Baggage Drop:** {info['baggage_drop']}  
+                - **Boarding:** {info['boarding']}
+                """
+            )
+            st.markdown(f"[Visit {airline_name} Website]({info['contact']})")
+        else:
+            st.info("No policy data available for this airline.")
+    st.markdown("---")
 
     # 🌤 Live Weather at Destination
-    header_icon("Live Weather at Destination", "assets/weather.png")
-    city = normalize_city(details["destination"])
-    st.caption(f"Fetching live weather for: **{city or 'Unknown'}**")
-
-    if not city:
-        st.warning("No valid city found for this destination.")
-    else:
-        try:
-            api_key = st.secrets["weather"]["api_key"]
-            url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-            response = requests.get(url, timeout=10)
-            data = response.json()
-            if data.get("cod") == 200:
-                temp = data["main"]["temp"]
-                desc = data["weather"][0]["description"].title()
-                icon = data["weather"][0]["icon"]
-                cols = st.columns([1, 4])
-                with cols[0]:
-                    st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
-                with cols[1]:
-                    st.success(f"Weather in {city}: **{temp} °C**, {desc}")
-            else:
-                st.warning(f"Weather not available for '{city}'.")
-        except Exception:
-            st.warning("Unable to fetch live weather data.")
+    with st.container():
+        section_header("Live Weather at Destination", "assets/weather.png")
+        city = normalize_city(details["destination"])
+        if not city:
+            st.warning("No valid city found for this destination.")
+        else:
+            try:
+                api_key = st.secrets["weather"]["api_key"]
+                url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+                response = requests.get(url, timeout=10)
+                data = response.json()
+                if data.get("cod") == 200:
+                    temp = data["main"]["temp"]
+                    desc = data["weather"][0]["description"].title()
+                    icon = data["weather"][0]["icon"]
+                    cols = st.columns([1, 4])
+                    with cols[0]:
+                        st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
+                    with cols[1]:
+                        st.success(f"Weather in {city}: **{temp} °C**, {desc}")
+                else:
+                    st.warning(f"Weather not available for '{city}'.")
+            except Exception:
+                st.warning("Unable to fetch live weather data.")
 else:
     st.info("Search or select a flight above to view details.")
 
 # ---------------------------
 # FOOTER
 # ---------------------------
-st.divider()
-st.caption("Developed as part of a University Project • Prototype v4.0 • © 2025 FlySmart")
+st.markdown("---")
+st.caption("Developed as part of a University Project • Prototype v4.2 • © 2025 FlySmart")
