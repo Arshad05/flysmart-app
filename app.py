@@ -73,13 +73,18 @@ st.divider()
 # ---------------------------
 # FLIGHT SEARCH
 # ---------------------------
-# 🔎 Flight search field
+st.subheader("🔎 Find Your Flight")
+
+# Initialize variable to prevent reference errors
+flight_number = None
+
+# Search bar
 search_query = st.text_input(
     "Enter your flight number or airline (e.g. BA102 or Emirates):",
     placeholder="Start typing to search..."
 ).strip().upper()
 
-# Filter matching flights
+# Filter logic
 filtered_flights = flights_df[
     flights_df["flight_number"].str.contains(search_query, case=False, na=False) |
     flights_df["airline"].str.contains(search_query, case=False, na=False)
@@ -93,16 +98,15 @@ else:
     flight_number = filtered_flights.iloc[0]["flight_number"]
     st.success(f"✅ Showing details for flight **{flight_number}**")
 
-
 # ---------------------------
 # MAIN CONTENT
 # ---------------------------
-if flight_number:
+if flight_number:  # only runs if valid flight selected
     if flight_number in sample_flights:
         details = sample_flights[flight_number]
         airline_name = details["airline"]
 
-        # 1️⃣ Flight Summary
+        # ✈️ Flight Summary
         st.subheader("✈️ Flight Summary")
         st.markdown(
             f"""
@@ -114,7 +118,7 @@ if flight_number:
         )
         st.divider()
 
-        # 2️⃣ Countdown to Departure
+        # ⏰ Countdown
         st.subheader("⏰ Time to Departure")
         dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
         remaining = dep_time - datetime.now()
@@ -126,7 +130,7 @@ if flight_number:
             st.warning("This flight has already departed or is currently in progress.")
         st.divider()
 
-        # 3️⃣ Airline Information
+        # 🧳 Airline Info
         st.subheader("🧳 Airline Information")
         if airline_name in airline_data:
             info = airline_data[airline_name]
@@ -142,19 +146,15 @@ if flight_number:
             st.info("No policy data available for this airline.")
         st.divider()
 
-        # 4️⃣ Simulated Flight Position (Simple Streamlit Map)
+        # 🌍 Simulated Flight Position
         st.subheader("🌍 Current Flight Position (Simulated)")
-
-        # Generate random simulated coordinates
         lat = random.uniform(-60, 60)
         lon = random.uniform(-150, 150)
-
-        # Simple Streamlit map
         st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
         st.caption("This position is simulated for demonstration purposes.")
         st.divider()
 
-        # 5️⃣ Live Weather at Destination
+        # 🌤 Weather
         st.subheader("🌤 Live Weather at Destination")
         city = details["destination"].split("(")[0].strip()
 
@@ -176,9 +176,6 @@ if flight_number:
                 st.warning("Weather data not available right now.")
         except Exception:
             st.warning("Unable to fetch live weather data.")
-
-    else:
-        st.error("❌ Flight not found. Please check your flight number and try again.")
 else:
     st.info("Enter your flight number above to track your journey.")
 
@@ -187,4 +184,3 @@ else:
 # ---------------------------
 st.divider()
 st.caption("Developed as part of a University Project • Prototype v3.2 • © 2025 FlySmart")
-
