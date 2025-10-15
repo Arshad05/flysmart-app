@@ -71,20 +71,20 @@ st.caption("Track your flight. Know what matters. Travel stress-free.")
 st.divider()
 
 # ---------------------------
-# SMART UNIFIED FLIGHT SEARCH
+# SMART FLIGHT SEARCH
 # ---------------------------
 st.subheader("🔎 Find Your Flight")
 
-# Build list of flights with full details for searching
+# Build list of flights with full info
 flight_options = [
     f"{row['flight_number']} — {row['airline']} ({row['origin']} → {row['destination']})"
     for _, row in flights_df.iterrows()
 ]
 
-# Unified dropdown (search + select)
+# Unified dropdown
 search_selection = st.selectbox(
     "Search or select a flight:",
-    options=[""] + flight_options,  # empty at top
+    options=[""] + flight_options,
     index=0,
     placeholder="Start typing flight number or airline..."
 )
@@ -113,7 +113,7 @@ if flight_number:
         )
         st.divider()
 
-        # ⏰ Countdown
+        # ⏰ Countdown to Departure
         st.subheader("⏰ Time to Departure")
         dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
         remaining = dep_time - datetime.now()
@@ -125,7 +125,7 @@ if flight_number:
             st.warning("This flight has already departed or is currently in progress.")
         st.divider()
 
-        # 🧳 Airline Info
+        # 🧳 Airline Information
         st.subheader("🧳 Airline Information")
         if airline_name in airline_data:
             info = airline_data[airline_name]
@@ -149,28 +149,42 @@ if flight_number:
         st.caption("This position is simulated for demonstration purposes.")
         st.divider()
 
-        # 🌤 Weather
+        # 🌤 Live Weather at Destination (Improved)
         st.subheader("🌤 Live Weather at Destination")
-        city = details["destination"].split("(")[0].strip()
 
-        try:
-            api_key = st.secrets["weather"]["api_key"]
-            url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-            response = requests.get(url, timeout=10)
-            data = response.json()
-            if data.get("cod") == 200:
-                temp = data["main"]["temp"]
-                desc = data["weather"][0]["description"].title()
-                icon = data["weather"][0]["icon"]
-                cols = st.columns([1, 4])
-                with cols[0]:
-                    st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
-                with cols[1]:
-                    st.success(f"Weather in {city}: **{temp} °C**, {desc}")
-            else:
-                st.warning("Weather data not available right now.")
-        except Exception:
-            st.warning("Unable to fetch live weather data.")
+        # Clean and normalize city name
+        raw_city = details["destination"]
+        city = raw_city.split("(")[0].strip()
+        if len(city.split()) > 3 or any(x in city for x in ["Intl", "International", "Airport"]):
+            city = city.split()[0]
+        city = city.replace("-", " ").strip()
+
+        # Display what city is being queried (debugging)
+        st.caption(f"Fetching live weather for: **{city}**")
+
+        if not city or city.lower() in ["n/a", "-", "unknown"]:
+            st.warning("No valid city found for this destination.")
+        else:
+            try:
+                api_key = st.secrets["weather"]["api_key"]
+                url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+                response = requests.get(url, timeout=10)
+                data = response.json()
+                if data.get("cod") == 200:
+                    temp = data["main"]["temp"]
+                    desc = data["weather"][0]["description"].title()
+                    icon = data["weather"][0]["icon"]
+                    cols = st.columns([1, 4])
+                    with cols[0]:
+                        st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
+                    with cols[1]:
+                        st.success(f"Weather in {city}: **{temp} °C**, {desc}")
+                else:
+                    st.warning(f"Weather not available for '{city}'.")
+            except Exception as e:
+                st.warning("Unable to fetch live weather data.")
+    else:
+        st.error("❌ Flight not found. Please check your flight number and try again.")
 else:
     st.info("Search or select a flight above to view details.")
 
@@ -178,4 +192,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.4 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v3.5 • © 2025 FlySmart")
