@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import pydeck as pdk
 from datetime import datetime
+import math
 
 # ---------------------------
 # APP CONFIG
@@ -14,7 +15,7 @@ st.set_page_config(
 )
 
 st.title("✈️ FlySmart (Live Flight Data Test)")
-st.caption("Prototype demo — now with live flight search.")
+st.caption("Prototype demo — now with live flight search and better error handling.")
 st.divider()
 
 # ---------------------------
@@ -36,7 +37,7 @@ try:
             "sensors", "geo_altitude", "squawk", "spi", "position_source"
         ])
 
-        # Clean + filter
+        # Clean and filter
         df = df.dropna(subset=["latitude", "longitude"])
         df["callsign"] = df["callsign"].fillna("Unknown").str.strip()
         df = df[df["callsign"] != "Unknown"]
@@ -54,15 +55,23 @@ try:
             if not match.empty:
                 st.success(f"✅ Found {len(match)} matching flight(s).")
 
-                # Show details for the first match
+                # Safely extract first flight info
                 first_flight = match.iloc[0]
+
+                def safe_value(value, suffix=""):
+                    if pd.isna(value) or value is None:
+                        return "N/A"
+                    if isinstance(value, (int, float)):
+                        return f"{round(value)}{suffix}"
+                    return str(value)
+
                 st.markdown(
                     f"""
                     **Callsign:** {first_flight['callsign']}  
                     **Country:** {first_flight['origin_country']}  
-                    **Altitude:** {round(first_flight['geo_altitude'] or 0)} m  
-                    **Velocity:** {round(first_flight['velocity'] or 0)} m/s  
-                    **Position:** ({round(first_flight['latitude'], 2)}, {round(first_flight['longitude'], 2)})
+                    **Altitude:** {safe_value(first_flight['geo_altitude'], ' m')}  
+                    **Velocity:** {safe_value(first_flight['velocity'], ' m/s')}  
+                    **Position:** ({safe_value(first_flight['latitude'])}, {safe_value(first_flight['longitude'])})
                     """
                 )
 
@@ -96,7 +105,7 @@ try:
                 st.warning("❌ No flights found with that callsign. Showing all flights below.")
 
         # ---------------------------
-        # 3️⃣ GLOBAL MAP (fallback / all flights)
+        # 3️⃣ GLOBAL MAP (fallback)
         # ---------------------------
         if not search_query or match.empty:
             st.subheader("🌍 All Live Flights")
@@ -128,4 +137,4 @@ except Exception as e:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption(f"🧭 Prototype v3.1 • Run completed at {datetime.utcnow().strftime('%H:%M:%S UTC')} • Data: OpenSky Network")
+st.caption(f"🧭 Prototype v3.2 • Run completed at {datetime.utcnow().strftime('%H:%M:%S UTC')} • Data: OpenSky Network")
