@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import requests
@@ -14,14 +13,14 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("✈️ FlySmart (Live Data Test)")
-st.caption("Prototype test for Assessment 002 — exploring real-time flight data & paths.")
+st.title("✈️ FlySmart (Live Flight Data Test)")
+st.caption("Prototype demo — now with live flight search.")
 st.divider()
 
 # ---------------------------
-# 1️⃣ FETCH REAL FLIGHT DATA (OpenSky Network API)
+# 1️⃣ FETCH REAL FLIGHT DATA
 # ---------------------------
-st.subheader("🛰️ Live Flights from OpenSky API")
+st.subheader("🛰️ Live Flights from OpenSky Network")
 
 try:
     url = "https://opensky-network.org/api/states/all"
@@ -37,98 +36,96 @@ try:
             "sensors", "geo_altitude", "squawk", "spi", "position_source"
         ])
 
-        # Drop flights without position data
+        # Clean + filter
         df = df.dropna(subset=["latitude", "longitude"])
-
-        # Clean up callsigns
         df["callsign"] = df["callsign"].fillna("Unknown").str.strip()
+        df = df[df["callsign"] != "Unknown"]
 
-        st.success(f"✅ Loaded {len(df)} live flights worldwide.")
-        st.dataframe(df[["callsign", "origin_country", "latitude", "longitude"]].head(10))
+        st.success(f"✅ Loaded {len(df)} active flights worldwide.")
 
         # ---------------------------
-        # 2️⃣ VISUALIZE FLIGHTS ON MAP
+        # 2️⃣ SEARCH FLIGHT
         # ---------------------------
-        st.subheader("🌍 Live Global Flight Positions")
+        st.subheader("🔎 Search for a Specific Flight")
+        search_query = st.text_input("Enter flight number or callsign (e.g., BAW123, UAE77):").strip().upper()
 
-        # Map using PyDeck ScatterplotLayer
-        layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=df,
-            get_position='[longitude, latitude]',
-            get_color='[255, 0, 0, 160]',
-            get_radius=60000,
-            pickable=True,
-        )
+        if search_query:
+            match = df[df["callsign"].str.contains(search_query, case=False, na=False)]
+            if not match.empty:
+                st.success(f"✅ Found {len(match)} matching flight(s).")
 
-        view_state = pdk.ViewState(latitude=20, longitude=0, zoom=1.5)
-        st.pydeck_chart(
-            pdk.Deck(
-                map_style="mapbox://styles/mapbox/light-v9",
-                initial_view_state=view_state,
-                layers=[layer],
-                tooltip={"text": "✈️ {callsign}\nCountry: {origin_country}"}
+                # Show details for the first match
+                first_flight = match.iloc[0]
+                st.markdown(
+                    f"""
+                    **Callsign:** {first_flight['callsign']}  
+                    **Country:** {first_flight['origin_country']}  
+                    **Altitude:** {round(first_flight['geo_altitude'] or 0)} m  
+                    **Velocity:** {round(first_flight['velocity'] or 0)} m/s  
+                    **Position:** ({round(first_flight['latitude'], 2)}, {round(first_flight['longitude'], 2)})
+                    """
+                )
+
+                # Center map on that flight
+                view_state = pdk.ViewState(
+                    latitude=first_flight["latitude"],
+                    longitude=first_flight["longitude"],
+                    zoom=5,
+                    pitch=0,
+                )
+
+                layer = pdk.Layer(
+                    "ScatterplotLayer",
+                    data=match,
+                    get_position='[longitude, latitude]',
+                    get_color='[0, 255, 100, 200]',
+                    get_radius=80000,
+                    pickable=True,
+                )
+
+                st.pydeck_chart(
+                    pdk.Deck(
+                        map_style="mapbox://styles/mapbox/dark-v10",
+                        initial_view_state=view_state,
+                        layers=[layer],
+                        tooltip={"text": "✈️ {callsign}\nCountry: {origin_country}"}
+                    )
+                )
+
+            else:
+                st.warning("❌ No flights found with that callsign. Showing all flights below.")
+
+        # ---------------------------
+        # 3️⃣ GLOBAL MAP (fallback / all flights)
+        # ---------------------------
+        if not search_query or match.empty:
+            st.subheader("🌍 All Live Flights")
+            layer = pdk.Layer(
+                "ScatterplotLayer",
+                data=df,
+                get_position='[longitude, latitude]',
+                get_color='[255, 0, 0, 160]',
+                get_radius=50000,
+                pickable=True,
             )
-        )
+            view_state = pdk.ViewState(latitude=20, longitude=0, zoom=1.5)
+            st.pydeck_chart(
+                pdk.Deck(
+                    map_style="mapbox://styles/mapbox/light-v9",
+                    initial_view_state=view_state,
+                    layers=[layer],
+                    tooltip={"text": "✈️ {callsign}\nCountry: {origin_country}"}
+                )
+            )
 
     else:
-        st.error("⚠️ No flight data available from OpenSky right now.")
+        st.error("⚠️ No flight data available right now.")
 
 except Exception as e:
     st.error(f"Error fetching data: {e}")
 
+# ---------------------------
+# FOOTER
+# ---------------------------
 st.divider()
-
-# ---------------------------
-# 3️⃣ FLIGHT PATH TEST (Example Route)
-# ---------------------------
-st.subheader("🛫 Sample Route Path (London → Dubai)")
-
-# Example coordinates
-origin = {"city": "London", "lat": 51.4700, "lon": -0.4543}  # Heathrow
-destination = {"city": "Dubai", "lat": 25.2532, "lon": 55.3657}  # DXB
-
-path_df = pd.DataFrame([
-    {"lon": origin["lon"], "lat": origin["lat"], "city": origin["city"]},
-    {"lon": destination["lon"], "lat": destination["lat"], "city": destination["city"]}
-])
-
-# Line Layer for the route
-line_layer = pdk.Layer(
-    "LineLayer",
-    data=path_df,
-    get_source_position='[lon, lat]',
-    get_target_position='[lon, lat]',
-    get_color='[0, 150, 255, 200]',
-    get_width=4,
-)
-
-# Marker Layer for airports
-airport_layer = pdk.Layer(
-    "ScatterplotLayer",
-    data=path_df,
-    get_position='[lon, lat]',
-    get_color='[0, 255, 100, 255]',
-    get_radius=80000,
-    pickable=True,
-)
-
-# Combine route + markers
-view_state = pdk.ViewState(latitude=35, longitude=20, zoom=2)
-st.pydeck_chart(
-    pdk.Deck(
-        map_style="mapbox://styles/mapbox/dark-v10",
-        initial_view_state=view_state,
-        layers=[line_layer, airport_layer],
-        tooltip={"text": "{city}"}
-    )
-)
-
-st.caption("🧭 Example visualization of a flight path between London and Dubai.")
-st.divider()
-
-# ---------------------------
-# 4️⃣ SUMMARY
-# ---------------------------
-st.info("✅ This sandbox demonstrates live flight data and a sample route path. Not part of Assessment 001.")
-st.caption(f"Run completed at {datetime.utcnow().strftime('%H:%M:%S UTC')} • OpenSky API test mode")
+st.caption(f"🧭 Prototype v3.1 • Run completed at {datetime.utcnow().strftime('%H:%M:%S UTC')} • Data: OpenSky Network")
