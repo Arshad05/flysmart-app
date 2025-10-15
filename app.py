@@ -87,13 +87,28 @@ def normalize_city(destination: str) -> str:
     return city
 
 def section_header(title, icon=None):
-    """Header row with optional icon."""
+    """Header with optional small icon."""
     cols = st.columns([0.08, 0.92])
     with cols[0]:
         if icon and os.path.exists(icon):
             st.image(icon, width=30)
     with cols[1]:
         st.subheader(title)
+
+def card(content):
+    """Soft white translucent card for section grouping."""
+    st.markdown(
+        f"""
+        <div style="background-color: rgba(255,255,255,0.8);
+                    padding: 1rem 1.5rem;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                    margin-bottom: 1.2rem;">
+            {content}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # ---------------------------
 # DATA DICTIONARY
@@ -112,7 +127,7 @@ sample_flights = {
 }
 
 # ---------------------------
-# HEADER (FlySmart logo + title)
+# HEADER
 # ---------------------------
 cols = st.columns([0.15, 0.85])
 with cols[0]:
@@ -120,13 +135,12 @@ with cols[0]:
         st.image("assets/logo.png", width=70)
 with cols[1]:
     st.markdown("<h1 style='margin-bottom:0;'>FlySmart Flight Tracker</h1>", unsafe_allow_html=True)
-    st.caption("A modern way to track your flight effortlessly.")
+    st.caption("Track your flight with clarity and confidence.")
 
-# Subtle divider and spacing
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------
-# STYLING FOR SEARCH BOX CENTERING
+# STYLING FOR SEARCH
 # ---------------------------
 st.markdown(
     """
@@ -180,35 +194,36 @@ if flight_number and flight_number in sample_flights:
     details = sample_flights[flight_number]
     airline_name = details["airline"]
 
-    # ✈️ Flight Summary
-    with st.container():
-        st.markdown("### ✈️ Flight Summary")
-        st.markdown(
-            f"""
-            **Flight:** {flight_number} — {airline_name}  
-            **Route:** {details['origin']} → {details['destination']}  
-            **Departure:** {details['departure']}  
-            **Status:** {details['status']}
-            """
-        )
+    # ✈️ FLIGHT SUMMARY
+    status_color = {
+        "On Time": "green",
+        "Boarding": "orange",
+        "Delayed": "red",
+        "Cancelled": "gray"
+    }.get(details["status"], "blue")
 
-    st.markdown("---")
+    card(f"""
+    <h3>Flight Summary</h3>
+    <b>Flight:</b> {flight_number} — {airline_name}<br>
+    <b>Route:</b> {details['origin']} → {details['destination']}<br>
+    <b>Departure:</b> {details['departure']}<br>
+    <b>Status:</b> <span style="color:{status_color}">{details['status']}</span>
+    """)
 
-    # ⏰ Time to Departure
+    # ⏰ TIME TO DEPARTURE
+    dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
+    remaining = dep_time - datetime.now()
     with st.container():
         section_header("Time to Departure", "assets/departures.png")
-        dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
-        remaining = dep_time - datetime.now()
         if remaining.total_seconds() > 0:
             hours, remainder = divmod(int(remaining.total_seconds()), 3600)
             minutes = remainder // 60
             st.info(f"{hours} hours and {minutes} minutes remaining until departure.")
+            st.progress(min((hours / 12), 1))  # simple progress bar toward departure
         else:
             st.warning("This flight has already departed or is currently in progress.")
 
-    st.markdown("---")
-
-    # 🌍 Flight Map (restored)
+    # 🌍 FLIGHT MAP
     with st.container():
         st.subheader("Current Flight Position (Simulated)")
         lat = random.uniform(-60, 60)
@@ -216,27 +231,21 @@ if flight_number and flight_number in sample_flights:
         st.map(pd.DataFrame({"latitude": [lat], "longitude": [lon]}))
         st.caption("This position is simulated for demonstration purposes.")
 
-    st.markdown("---")
-
-    # 🧳 Airline Information
+    # 🧳 AIRLINE INFORMATION
     with st.container():
         section_header("Airline Information", "assets/luggage.png")
         if airline_name in airline_data:
             info = airline_data[airline_name]
-            st.markdown(
-                f"""
-                - **Check-in:** {info['check_in']}  
-                - **Baggage Drop:** {info['baggage_drop']}  
-                - **Boarding:** {info['boarding']}
-                """
-            )
-            st.markdown(f"[Visit {airline_name} Website]({info['contact']})")
+            card(f"""
+            - **Check-in:** {info['check_in']}  
+            - **Baggage Drop:** {info['baggage_drop']}  
+            - **Boarding:** {info['boarding']}  
+            [Visit {airline_name} Website]({info['contact']})
+            """)
         else:
             st.info("No policy data available for this airline.")
 
-    st.markdown("---")
-
-    # 🌤 Live Weather at Destination
+    # 🌤 LIVE WEATHER
     with st.container():
         section_header("Live Weather at Destination", "assets/weather.png")
         city = normalize_city(details["destination"])
@@ -252,11 +261,20 @@ if flight_number and flight_number in sample_flights:
                     temp = data["main"]["temp"]
                     desc = data["weather"][0]["description"].title()
                     icon = data["weather"][0]["icon"]
+                    # Add weather emoji
+                    if "rain" in desc.lower():
+                        emoji = "🌧️"
+                    elif "cloud" in desc.lower():
+                        emoji = "☁️"
+                    elif "clear" in desc.lower():
+                        emoji = "☀️"
+                    else:
+                        emoji = "🌤️"
                     cols = st.columns([1, 4])
                     with cols[0]:
                         st.image(f"http://openweathermap.org/img/wn/{icon}.png", width=64)
                     with cols[1]:
-                        st.success(f"Weather in {city}: **{temp} °C**, {desc}")
+                        st.success(f"{emoji} Weather in {city}: **{temp}°C**, {desc}")
                 else:
                     st.warning(f"Weather not available for '{city}'.")
             except Exception:
@@ -268,4 +286,4 @@ else:
 # FOOTER
 # ---------------------------
 st.markdown("---")
-st.caption("Developed as part of a University Project • Prototype v4.3 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v4.4 • © 2025 FlySmart")
