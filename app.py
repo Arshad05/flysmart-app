@@ -50,7 +50,7 @@ set_background("background.jpg")
 # DEBUG: Check asset files
 # ---------------------------
 st.markdown("### 🧩 Icon Check (temporary)")
-for img in ["plane.png", "luggage.png", "weather.png"]:
+for img in ["logo.png", "plane.png", "luggage.png", "weather.png", "departures.png"]:
     path = os.path.join("assets", img)
     st.write(f"{img}: {'✅ Found' if os.path.exists(path) else '❌ Missing'}")
 st.divider()
@@ -127,10 +127,18 @@ sample_flights = {
 }
 
 # ---------------------------
-# HEADER
+# HEADER (with FlySmart logo)
 # ---------------------------
-st.title("FlySmart Flight Tracker")
-st.caption("Professional flight overview and real-time insights for travelers.")
+logo_path = "assets/logo.png"
+
+cols = st.columns([0.15, 0.85])
+with cols[0]:
+    if os.path.exists(logo_path):
+        st.image(logo_path, width=60, use_container_width=False)
+with cols[1]:
+    st.title("FlySmart Flight Tracker")
+    st.caption("Professional flight overview and real-time insights for travelers.")
+
 st.divider()
 
 # ---------------------------
@@ -176,8 +184,8 @@ if flight_number and flight_number in sample_flights:
     )
     st.divider()
 
-    # ⏰ Countdown to Departure
-    header_icon("Time to Departure", "assets/clock.png" if os.path.exists("assets/clock.png") else "assets/plane.png")
+    # ⏰ Countdown to Departure (new icon)
+    header_icon("Time to Departure", "assets/departures.png")
     dep_time = datetime.strptime(details["departure"], "%Y-%m-%d %H:%M")
     remaining = dep_time - datetime.now()
     if remaining.total_seconds() > 0:
@@ -245,4 +253,4 @@ else:
 # FOOTER
 # ---------------------------
 st.divider()
-st.caption("Developed as part of a University Project • Prototype v3.9 • © 2025 FlySmart")
+st.caption("Developed as part of a University Project • Prototype v4.0 • © 2025 FlySmart")
