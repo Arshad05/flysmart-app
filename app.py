@@ -13,7 +13,7 @@ import os
 # ---------------------------
 st.set_page_config(
     page_title="FlySmart | Flight Tracker",
-    page_icon="✈️",
+    page_icon="assets/logo.png",
     layout="centered"
 )
 
@@ -273,3 +273,4 @@ else:
 # ---------------------------
 st.markdown("---")
 st.caption("Developed as part of a University Project • Prototype v4.8 • © 2025 FlySmart")
+
